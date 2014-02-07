@@ -2,9 +2,8 @@
 #include "header.h"
 
 /*
-We call init_pwd_window() when our program is starting to load our TutorialTextEditor struct
-with references to the widgets we need. This is done using GtkBuilder to read
-the XML file we created using Glade.
+We call init_pwd_window() when our program is starting to load 
+password prompt window with references to Glade file. 
 */
 gboolean init_pwd_window(PasswordWindow *passwordwindow)
 {
@@ -13,7 +12,7 @@ gboolean init_pwd_window(PasswordWindow *passwordwindow)
 
 	/* use GtkBuilder to build our interface from the XML file */
 	builder = gtk_builder_new ();
-	if (gtk_builder_add_from_file (builder, BUILDER_XML_FILE, &err) == 0)
+	if (gtk_builder_add_from_file (builder, PASSWORD_GLADE_FILE, &err) == 0)
 	{
 		error_message (err->message);
 		g_error_free (err);

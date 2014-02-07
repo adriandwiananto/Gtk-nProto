@@ -2,7 +2,7 @@
 #define _NPROTO_
 
 /* location of UI XML file relative to path in which program is running */
-#define BUILDER_XML_FILE "password.glade"
+#define PASSWORD_GLADE_FILE "password.glade"
 
 typedef struct
 {
