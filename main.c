@@ -1,21 +1,25 @@
 #include <gtk/gtk.h>
 #include "header.h"
 
+#define DEFINE_VARIABLES
+//~ PasswordWindow *passwordwindow;
+//~ MainMenuWindow *mainmenuwindow;
+	
 int main(int argc, char *argv[])
 {	
-	PasswordWindow *passwordwindow;
+	//~ PasswordWindow *passwordwindow;
 	//~ MainMenuWindow *mainmenuwindow;
 	
 	passwordwindow = g_slice_new(PasswordWindow);
-	//~ mainmenuwindow = g_slice_new(MainMenuWindow);
+	mainmenuwindow = g_slice_new(MainMenuWindow);
 	
 	//~ Windows *windows_obj;
 	//~ windows_obj = g_slice_new(Windows);
 	
 	gtk_init(&argc,&argv);
 
-	//~ if(init_mainmenu_window(windows_obj) == FALSE) return 1;
-	//~ gtk_widget_hide(windows_obj->mainmenuwindow->window);
+	if(init_mainmenu_window(mainmenuwindow) == FALSE) return 1;
+	gtk_widget_hide(mainmenuwindow->window);
 		
 	if(init_pwd_window(passwordwindow) == FALSE) return 1;
 	gtk_widget_show(passwordwindow->window);
@@ -24,6 +28,7 @@ int main(int argc, char *argv[])
 
 	//~ g_slice_free(Windows, windows_obj);
 	g_slice_free(PasswordWindow, passwordwindow);
+	g_slice_free(MainMenuWindow, mainmenuwindow);
 
 	return 0;
 }

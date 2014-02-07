@@ -5,7 +5,7 @@
 We call init_pwd_window() when our program is starting to load 
 password prompt window with references to Glade file. 
 */
-//gboolean init_pwd_window(PasswordWindow *passwordwindow)
+//gboolean init_pwd_window(Windows *windows_obj)
 gboolean init_pwd_window(PasswordWindow *passwordwindow)
 {
 	GtkBuilder              *builder;
@@ -13,7 +13,7 @@ gboolean init_pwd_window(PasswordWindow *passwordwindow)
 
 	/* use GtkBuilder to build our interface from the XML file */
 	builder = gtk_builder_new ();
-	if (gtk_builder_add_from_file (builder, PASSWORD_GLADE_FILE, &err) == 0)
+	if (gtk_builder_add_from_file (builder, UI_GLADE_FILE, &err) == 0)
 	{
 		error_message (err->message);
 		g_error_free (err);
@@ -23,8 +23,8 @@ gboolean init_pwd_window(PasswordWindow *passwordwindow)
 	/* get the widgets which will be referenced in callbacks */
 	passwordwindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "pwd_window"));
 	passwordwindow->text_entry = GTK_WIDGET (gtk_builder_get_object (builder, "pwd_entry"));
-	passwordwindow->button1 = GTK_WIDGET (gtk_builder_get_object (builder, "pwd_ok_button"));
-	passwordwindow->button2 = GTK_WIDGET (gtk_builder_get_object (builder, "pwd_cancel_button"));
+	//~ passwordwindow->button1 = GTK_WIDGET (gtk_builder_get_object (builder, "pwd_ok_button"));
+	//~ passwordwindow->button2 = GTK_WIDGET (gtk_builder_get_object (builder, "pwd_cancel_button"));
 
 	gtk_builder_connect_signals (builder, passwordwindow);
 	g_object_unref(G_OBJECT(builder));
@@ -72,7 +72,9 @@ void read_entry(PasswordWindow *passwordwindow)
 		/*password entry handler goes in here*/
 		//show_mainmenu(windows_obj);
 		printf("Password NOT EMPTY\n");
-		gtk_entry_set_text((GtkEntry *)passwordwindow->text_entry, "");
+		//~ gtk_entry_set_text((GtkEntry *)passwordwindow->text_entry, "");
+		gtk_widget_hide(passwordwindow->window);
+		gtk_widget_show(mainmenuwindow->window);
 	}
 }
 

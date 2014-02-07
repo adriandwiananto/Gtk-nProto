@@ -2,25 +2,24 @@
 #define _NPROTO_
 
 /* location of UI XML file relative to path in which program is running */
-#define PASSWORD_GLADE_FILE "password.glade"
-#define MAINMENU_GLADE_FILE "mainmenu.glade"
+#define UI_GLADE_FILE "ui.glade"
 
 typedef struct
 {
 	GtkWidget *window;
 	GtkWidget *text_entry;
-	GtkWidget *button1;
-	GtkWidget *button2;
+	//~ GtkWidget *button1;
+	//~ GtkWidget *button2;
 }PasswordWindow;
 
 typedef struct
 {
 	GtkWidget *window;
-	GtkWidget *new_trans_button;
-	GtkWidget *history_button;
-	GtkWidget *settlement_button;
-	GtkWidget *option_button;
-	GtkWidget *exit_button;
+	//~ GtkWidget *new_trans_button;
+	//~ GtkWidget *history_button;
+	//~ GtkWidget *settlement_button;
+	//~ GtkWidget *option_button;
+	//~ GtkWidget *exit_button;
 }MainMenuWindow;
 
 typedef struct
@@ -44,6 +43,15 @@ void error_message (const gchar *message);
 
 /*window init*/
 gboolean init_pwd_window(PasswordWindow *passwordwindow);
-//~ gboolean init_mainmenu_window(Windows *windows_obj);
+gboolean init_mainmenu_window(MainMenuWindow *mainmenuwindow);
+
+#ifndef DEFINE_VARIABLES
+#define EXTERN /* nothing */
+#else
+#define EXTERN extern
+#endif /* DEFINE_VARIABLES */
+
+EXTERN PasswordWindow *passwordwindow;
+EXTERN MainMenuWindow *mainmenuwindow;
 
 #endif
