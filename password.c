@@ -1,43 +1,5 @@
 #include <gtk/gtk.h>
-
-/* location of UI XML file relative to path in which program is running */
-#define BUILDER_XML_FILE "password.glade"
-
-typedef struct
-{
-	GtkWidget *window;
-	GtkWidget *text_entry;
-	GtkWidget *button1;
-	GtkWidget *button2;
-}PasswordWindow;
-
-void on_pwd_ok_button_clicked (GtkButton *button, PasswordWindow *passwordwindow);
-void on_pwd_cancel_button_clicked (GtkButton *button, PasswordWindow *passwordwindow);
-void on_pwd_entry_activate (GtkButton *button, PasswordWindow *passwordwindow);
-
-void read_entry(PasswordWindow *passwordwindow);
-
-gboolean init_pwd_window(PasswordWindow *passwordwindow);
-void error_message (const gchar *message);
-
-int main(int argc, char *argv[])
-{
-	PasswordWindow *passwordwindow;
-
-	passwordwindow = g_slice_new(PasswordWindow);
-
-	gtk_init(&argc,&argv);
-
-	if(init_pwd_window(passwordwindow) == FALSE) return 1;
-
-	gtk_widget_show(passwordwindow->window);
-
-	gtk_main();
-
-	g_slice_free(PasswordWindow, passwordwindow);
-
-	return 0;
-}
+#include "header.h"
 
 /*
 We call init_pwd_window() when our program is starting to load our TutorialTextEditor struct
