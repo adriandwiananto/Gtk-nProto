@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-Wall -o
-SOURCES=main.c password.c
+CFLAGS=-g -Wall -o
+SOURCES=main.c password.c 
 EXECUTABLE=nproto
 
 all:
