@@ -119,6 +119,6 @@ void read_entry(PasswordWindow *passwordwindow)
 	pwd_entry_text = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
 	printf("Password: %s\n", pwd_entry_text);
 	
-	gtk_entry_set_text((GtkEntry *)passwordwindow->text_entry, "");
+	gtk_entry_set_text(passwordwindow->text_entry, "");
 	
 }
