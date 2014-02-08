@@ -1,7 +1,6 @@
-#include <gtk/gtk.h>
 #include "header.h"
 
-gboolean init_mainmenu_window(MainMenuWindow *mainmenuwindow)
+gboolean init_mainmenu_window()
 {
 	GtkBuilder              *builder;
 	GError                  *err=NULL;
@@ -17,14 +16,34 @@ gboolean init_mainmenu_window(MainMenuWindow *mainmenuwindow)
 
 	/* get the widgets which will be referenced in callbacks */
 	mainmenuwindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "mm_window"));
-	//~ mainmenuwindow->new_trans_button = GTK_WIDGET (gtk_builder_get_object (builder, "mm_new_trans_button"));
-	//~ mainmenuwindow->history_button = GTK_WIDGET (gtk_builder_get_object (builder, "mm_history_button"));
-	//~ mainmenuwindow->settlement_button = GTK_WIDGET (gtk_builder_get_object (builder, "mm_settlement_button"));
-	//~ mainmenuwindow->option_button = GTK_WIDGET (gtk_builder_get_object (builder, "mm_option_button"));
-	//~ mainmenuwindow->exit_button = GTK_WIDGET (gtk_builder_get_object (builder, "mm_exit_button"));
 
 	gtk_builder_connect_signals (builder, mainmenuwindow);
 	g_object_unref(G_OBJECT(builder));
 	
 	return TRUE;
+}
+
+void on_mm_new_trans_button_clicked (GtkButton *button)
+{
+	WindowSwitcher(FALSE,TRUE,TRUE);
+}
+
+void on_mm_history_button_clicked (GtkButton *button)
+{
+
+}
+
+void on_mm_settlement_button_clicked (GtkButton *button)
+{
+	
+}
+
+void on_mm_option_button_clicked (GtkButton *button)
+{
+	
+}
+
+void on_mm_exit_button_clicked (GtkButton *button)
+{
+	gtk_main_quit();
 }

@@ -1,34 +1,26 @@
-#include <gtk/gtk.h>
 #include "header.h"
 
-#define DEFINE_VARIABLES
-//~ PasswordWindow *passwordwindow;
-//~ MainMenuWindow *mainmenuwindow;
+#define DECLARE_VARIABLES
 	
 int main(int argc, char *argv[])
 {	
-	//~ PasswordWindow *passwordwindow;
-	//~ MainMenuWindow *mainmenuwindow;
-	
 	passwordwindow = g_slice_new(PasswordWindow);
 	mainmenuwindow = g_slice_new(MainMenuWindow);
-	
-	//~ Windows *windows_obj;
-	//~ windows_obj = g_slice_new(Windows);
+	newtranswindow = g_slice_new(NewTransWindow);
 	
 	gtk_init(&argc,&argv);
 
-	if(init_mainmenu_window(mainmenuwindow) == FALSE) return 1;
-	gtk_widget_hide(mainmenuwindow->window);
-		
-	if(init_pwd_window(passwordwindow) == FALSE) return 1;
-	gtk_widget_show(passwordwindow->window);
+	if(init_newtrans_window() == FALSE) return 1;
+	if(init_mainmenu_window() == FALSE) return 1;
+	if(init_pwd_window() == FALSE) return 1;
+	
+	WindowSwitcher(TRUE,FALSE,FALSE);
 	
 	gtk_main();
 
-	//~ g_slice_free(Windows, windows_obj);
 	g_slice_free(PasswordWindow, passwordwindow);
 	g_slice_free(MainMenuWindow, mainmenuwindow);
+	g_slice_free(NewTransWindow, newtranswindow);
 
 	return 0;
 }
@@ -44,14 +36,14 @@ error_message (const gchar *message)
         GtkWidget               *dialog;
         
         /* log to terminal window */
-        g_warning (message);
+        g_warning ("%s",message);
         
         /* create an error message dialog and display modally to the user */
         dialog = gtk_message_dialog_new (NULL, 
                                          GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_MESSAGE_ERROR,
                                          GTK_BUTTONS_OK,
-                                         message);
+                                         "%s", message);
         
         gtk_window_set_title (GTK_WINDOW (dialog), "Error!");
         gtk_dialog_run (GTK_DIALOG (dialog));      

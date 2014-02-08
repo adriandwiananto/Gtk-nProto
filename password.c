@@ -1,12 +1,10 @@
-#include <gtk/gtk.h>
 #include "header.h"
 
 /*
 We call init_pwd_window() when our program is starting to load 
 password prompt window with references to Glade file. 
 */
-//gboolean init_pwd_window(Windows *windows_obj)
-gboolean init_pwd_window(PasswordWindow *passwordwindow)
+gboolean init_pwd_window()
 {
 	GtkBuilder              *builder;
 	GError                  *err=NULL;
@@ -23,8 +21,6 @@ gboolean init_pwd_window(PasswordWindow *passwordwindow)
 	/* get the widgets which will be referenced in callbacks */
 	passwordwindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "pwd_window"));
 	passwordwindow->text_entry = GTK_WIDGET (gtk_builder_get_object (builder, "pwd_entry"));
-	//~ passwordwindow->button1 = GTK_WIDGET (gtk_builder_get_object (builder, "pwd_ok_button"));
-	//~ passwordwindow->button2 = GTK_WIDGET (gtk_builder_get_object (builder, "pwd_cancel_button"));
 
 	gtk_builder_connect_signals (builder, passwordwindow);
 	g_object_unref(G_OBJECT(builder));
@@ -32,29 +28,25 @@ gboolean init_pwd_window(PasswordWindow *passwordwindow)
 	return TRUE;
 }
 
-void on_pwd_ok_button_clicked (GtkButton *button, PasswordWindow *passwordwindow)
-//~ void on_pwd_ok_button_clicked (GtkButton *button, Windows *windows_obj)
+void on_pwd_ok_button_clicked (GtkButton *button)
 {
 	printf("OK BUTTON CLICKED \n");
-	read_entry(passwordwindow);
+	read_pwd_entry();
 }
 
-void on_pwd_cancel_button_clicked (GtkButton *button, PasswordWindow *passwordwindow)
-//~ void on_pwd_cancel_button_clicked (GtkButton *button, Windows *windows_obj)
+void on_pwd_cancel_button_clicked (GtkButton *button)
 {
 	printf("CANCEL BUTTON CLICKED \n");	
 	gtk_main_quit();
 }
 
-void on_pwd_entry_activate (GtkButton *button, PasswordWindow *passwordwindow)
-//~ void on_pwd_entry_activate (GtkButton *button, Windows *windows_obj)
+void on_pwd_entry_activate (GtkButton *button)
 {
 	printf("password entered\n");
-	read_entry(passwordwindow);
+	read_pwd_entry();
 }
 
-//~ void read_entry(Windows *windows_obj)
-void read_entry(PasswordWindow *passwordwindow)
+void read_pwd_entry()
 {
 	const gchar *pwd_entry_text;
 	/*read text entry*/
@@ -70,11 +62,8 @@ void read_entry(PasswordWindow *passwordwindow)
 	else //assuming entered password is correct
 	{
 		/*password entry handler goes in here*/
-		//show_mainmenu(windows_obj);
 		printf("Password NOT EMPTY\n");
-		//~ gtk_entry_set_text((GtkEntry *)passwordwindow->text_entry, "");
-		gtk_widget_hide(passwordwindow->window);
-		gtk_widget_show(mainmenuwindow->window);
+		WindowSwitcher(FALSE,TRUE,FALSE);
 	}
 }
 

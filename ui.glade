@@ -6,6 +6,8 @@
     <property name="resizable">False</property>
     <property name="window_position">center-always</property>
     <property name="has_resize_grip">False</property>
+    <signal name="destroy" handler="gtk_main_quit" swapped="no"/>
+    <signal name="delete-event" handler="gtk_main_quit" swapped="no"/>
     <child>
       <object class="GtkGrid" id="grid1">
         <property name="visible">True</property>
@@ -21,6 +23,7 @@
             <property name="margin_right">5</property>
             <property name="margin_top">5</property>
             <property name="margin_bottom">5</property>
+            <signal name="clicked" handler="on_mm_new_trans_button_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -40,6 +43,7 @@
             <property name="margin_right">5</property>
             <property name="margin_top">5</property>
             <property name="margin_bottom">5</property>
+            <signal name="clicked" handler="on_mm_history_button_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">1</property>
@@ -59,6 +63,7 @@
             <property name="margin_right">5</property>
             <property name="margin_top">5</property>
             <property name="margin_bottom">5</property>
+            <signal name="clicked" handler="on_mm_settlement_button_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -78,6 +83,7 @@
             <property name="margin_right">5</property>
             <property name="margin_top">5</property>
             <property name="margin_bottom">5</property>
+            <signal name="clicked" handler="on_mm_option_button_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">1</property>
@@ -96,6 +102,7 @@
             <property name="margin_right">5</property>
             <property name="margin_top">5</property>
             <property name="margin_bottom">5</property>
+            <signal name="clicked" handler="on_mm_exit_button_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -109,6 +116,88 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="margin_top">20</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">2</property>
+            <property name="width">2</property>
+            <property name="height">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkWindow" id="new_trans_window">
+    <property name="can_focus">False</property>
+    <property name="modal">True</property>
+    <property name="window_position">center-always</property>
+    <signal name="destroy" handler="gtk_main_quit" swapped="no"/>
+    <signal name="delete-event" handler="gtk_main_quit" swapped="no"/>
+    <child>
+      <object class="GtkGrid" id="grid2">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkEntry" id="new_trans_SESN_entry">
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can_focus">False</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
+            <property name="margin_top">5</property>
+            <property name="editable">False</property>
+            <property name="max_length">3</property>
+            <property name="invisible_char">•</property>
+            <property name="invisible_char_set">True</property>
+            <signal name="activate" handler="on_new_trans_SESN_entry_activate" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">0</property>
+            <property name="width">1</property>
+            <property name="height">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="new_trans_label">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
+            <property name="label" translatable="yes">Security Number:</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">0</property>
+            <property name="width">1</property>
+            <property name="height">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSeparator" id="separator2">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_top">5</property>
+            <property name="margin_bottom">5</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">1</property>
+            <property name="width">2</property>
+            <property name="height">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="new_trans_cancel_button">
+            <property name="label" translatable="yes">Cancel</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="valign">center</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
+            <property name="margin_bottom">5</property>
+            <signal name="clicked" handler="on_new_trans_cancel_button_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -138,7 +227,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="margin_left">5</property>
-            <property name="margin_right">10</property>
+            <property name="margin_right">5</property>
             <property name="label" translatable="yes">Password:</property>
           </object>
           <packing>
@@ -152,6 +241,8 @@
           <object class="GtkEntry" id="pwd_entry">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="margin_right">5</property>
+            <property name="margin_top">5</property>
             <property name="visibility">False</property>
             <property name="invisible_char">•</property>
             <signal name="activate" handler="on_pwd_entry_activate" swapped="no"/>
@@ -171,6 +262,7 @@
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="halign">center</property>
+            <property name="margin_left">5</property>
             <signal name="clicked" handler="on_pwd_ok_button_clicked" swapped="no"/>
           </object>
           <packing>
