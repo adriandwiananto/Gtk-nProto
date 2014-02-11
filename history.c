@@ -1,10 +1,10 @@
 #include "header.h"
 
 /*
-We call init_newtrans_window() when our program is starting to load 
-new trans window with references to Glade file. 
+We call init_history_window() when our program is starting to load 
+history window with references to Glade file. 
 */
-gboolean init_newtrans_window()
+gboolean init_history_window()
 {
 	GtkBuilder              *builder;
 	GError                  *err=NULL;
@@ -19,17 +19,23 @@ gboolean init_newtrans_window()
 	}
 
 	/* get the widgets which will be referenced in callbacks */
-	newtranswindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "new_trans_window"));
-	newtranswindow->SESN_label = GTK_WIDGET (gtk_builder_get_object (builder, "new_trans_SESN_label"));
+	historywindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "history_window"));
+	historywindow->history_textview = GTK_WIDGET (gtk_builder_get_object (builder, "history_textview"));
 
-	gtk_builder_connect_signals (builder, newtranswindow);
+	gtk_builder_connect_signals (builder, historywindow);
 	g_object_unref(G_OBJECT(builder));
 	
 	return TRUE;
 }
 
-/* callback for Cancel button in new trans window */
-void on_new_trans_cancel_button_clicked (GtkButton *button)
+/* callback for Save As button in history window */
+void on_history_saveas_button_clicked (GtkButton *button)
+{
+	
+}
+
+/* callback for Close button in history window */
+void on_history_close_button_clicked (GtkButton *button)
 {
 	WindowSwitcher(	FALSE,	//password window
 					TRUE,	//gboolean f_mainmenu_window, 
@@ -38,4 +44,5 @@ void on_new_trans_cancel_button_clicked (GtkButton *button)
 					FALSE,	//settlement window
 					FALSE);	//option window
 }
+
 

@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-g -Wall -o
-SOURCES=main.c password.c mainmenu.c window_switcher.c newtrans.c RNG.c
+SOURCES=main.c password.c mainmenu.c window_switcher.c newtrans.c RNG.c history.c
 EXECUTABLE=nproto
 
 all:

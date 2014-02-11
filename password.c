@@ -28,18 +28,21 @@ gboolean init_pwd_window()
 	return TRUE;
 }
 
+/* callback for OK button in password prompt window */
 void on_pwd_ok_button_clicked (GtkButton *button)
 {
 	printf("OK BUTTON CLICKED \n");
 	read_pwd_entry();
 }
 
+/* callback for Cancel button in password prompt window */
 void on_pwd_cancel_button_clicked (GtkButton *button)
 {
 	printf("CANCEL BUTTON CLICKED \n");	
 	gtk_main_quit();
 }
 
+/* callback for pressing enter in password prompt window text box */
 void on_pwd_entry_activate (GtkButton *button)
 {
 	printf("password entered\n");
@@ -63,7 +66,12 @@ void read_pwd_entry()
 	{
 		/*password entry handler goes in here*/
 		printf("Password NOT EMPTY\n");
-		WindowSwitcher(FALSE,TRUE,FALSE);
+		WindowSwitcher(	FALSE,	//password window
+						TRUE,	//gboolean f_mainmenu_window, 
+						FALSE,	//new trans window
+						FALSE,	//history window
+						FALSE,	//settlement window
+						FALSE);	//option window
 	}
 }
 

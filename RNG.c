@@ -1,5 +1,6 @@
 #include "header.h"
 
+/* function for generating random number using /dev/random */
 int random_number_generator(int min_number, int max_number)
 {
 	int randomData = open("/dev/random", O_RDONLY);

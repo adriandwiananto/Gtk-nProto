@@ -1,5 +1,9 @@
 #include "header.h"
 
+/*
+We call init_mainmenu_window() when our program is starting to load 
+main menu window with references to Glade file. 
+*/
 gboolean init_mainmenu_window()
 {
 	GtkBuilder              *builder;
@@ -23,26 +27,41 @@ gboolean init_mainmenu_window()
 	return TRUE;
 }
 
+/* callback for New Trans button in main menu window */
 void on_mm_new_trans_button_clicked (GtkButton *button)
 {
-	WindowSwitcher(FALSE,TRUE,TRUE);
+	WindowSwitcher(	FALSE,	//password window
+					TRUE,	//gboolean f_mainmenu_window, 
+					TRUE,	//new trans window
+					FALSE,	//history window
+					FALSE,	//settlement window
+					FALSE);	//option window
 }
 
+/* callback for History button in main menu window */
 void on_mm_history_button_clicked (GtkButton *button)
 {
-
+	WindowSwitcher(	FALSE,	//password window
+					TRUE,	//gboolean f_mainmenu_window, 
+					FALSE,	//new trans window
+					TRUE,	//history window
+					FALSE,	//settlement window
+					FALSE);	//option window
 }
 
+/* callback for Settlement button in main menu window */
 void on_mm_settlement_button_clicked (GtkButton *button)
 {
 	
 }
 
+/* callback for Option button in main menu window */
 void on_mm_option_button_clicked (GtkButton *button)
 {
 	
 }
 
+/* callback for Exit button in main menu window */
 void on_mm_exit_button_clicked (GtkButton *button)
 {
 	gtk_main_quit();

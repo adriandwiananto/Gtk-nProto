@@ -7,21 +7,29 @@ int main(int argc, char *argv[])
 	passwordwindow = g_slice_new(PasswordWindow);
 	mainmenuwindow = g_slice_new(MainMenuWindow);
 	newtranswindow = g_slice_new(NewTransWindow);
+	historywindow = g_slice_new(HistoryWindow);
 	
 	gtk_init(&argc,&argv);
 
+	if(init_history_window() == FALSE) return 1;
 	if(init_newtrans_window() == FALSE) return 1;
 	if(init_mainmenu_window() == FALSE) return 1;
 	if(init_pwd_window() == FALSE) return 1;
 	
-	WindowSwitcher(TRUE,FALSE,FALSE);
+	WindowSwitcher(	TRUE,	//password window
+					FALSE,	//gboolean f_mainmenu_window, 
+					FALSE,	//new trans window
+					FALSE,	//history window
+					FALSE,	//settlement window
+					FALSE);	//option window
 	
 	gtk_main();
 
 	g_slice_free(PasswordWindow, passwordwindow);
 	g_slice_free(MainMenuWindow, mainmenuwindow);
 	g_slice_free(NewTransWindow, newtranswindow);
-
+	g_slice_free(HistoryWindow, historywindow);
+	
 	return 0;
 }
 
