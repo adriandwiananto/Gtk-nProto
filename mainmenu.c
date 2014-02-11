@@ -30,35 +30,41 @@ gboolean init_mainmenu_window()
 /* callback for New Trans button in main menu window */
 void on_mm_new_trans_button_clicked (GtkButton *button)
 {
-	WindowSwitcher(	FALSE,	//password window
-					TRUE,	//gboolean f_mainmenu_window, 
-					TRUE,	//new trans window
-					FALSE,	//history window
-					FALSE,	//settlement window
-					FALSE);	//option window
+	Bitwise WindowSwitcherFlag;
+	f_status_window = FALSE;
+	f_mainmenu_window = TRUE;
+	f_newtrans_window = TRUE;
+	WindowSwitcher(WindowSwitcherFlag);
 }
 
 /* callback for History button in main menu window */
 void on_mm_history_button_clicked (GtkButton *button)
 {
-	WindowSwitcher(	FALSE,	//password window
-					TRUE,	//gboolean f_mainmenu_window, 
-					FALSE,	//new trans window
-					TRUE,	//history window
-					FALSE,	//settlement window
-					FALSE);	//option window
+	Bitwise WindowSwitcherFlag;
+	f_status_window = FALSE;
+	f_mainmenu_window = TRUE;
+	f_history_window = TRUE;
+	WindowSwitcher(WindowSwitcherFlag);
 }
 
 /* callback for Settlement button in main menu window */
 void on_mm_settlement_button_clicked (GtkButton *button)
 {
-	
+	Bitwise WindowSwitcherFlag;
+	f_status_window = FALSE;
+	f_mainmenu_window = TRUE;
+	f_settlement_window = TRUE;
+	WindowSwitcher(WindowSwitcherFlag);
 }
 
 /* callback for Option button in main menu window */
 void on_mm_option_button_clicked (GtkButton *button)
 {
-	
+	Bitwise WindowSwitcherFlag;
+	f_status_window = FALSE;
+	f_mainmenu_window = TRUE;
+	f_option_window = TRUE;
+	WindowSwitcher(WindowSwitcherFlag);
 }
 
 /* callback for Exit button in main menu window */

@@ -31,11 +31,9 @@ gboolean init_newtrans_window()
 /* callback for Cancel button in new trans window */
 void on_new_trans_cancel_button_clicked (GtkButton *button)
 {
-	WindowSwitcher(	FALSE,	//password window
-					TRUE,	//gboolean f_mainmenu_window, 
-					FALSE,	//new trans window
-					FALSE,	//history window
-					FALSE,	//settlement window
-					FALSE);	//option window
+	Bitwise WindowSwitcherFlag;
+	f_status_window = FALSE;
+	f_mainmenu_window = TRUE;
+	WindowSwitcher(WindowSwitcherFlag);
 }
 

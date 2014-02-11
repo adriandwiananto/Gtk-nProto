@@ -4,24 +4,27 @@
 	
 int main(int argc, char *argv[])
 {	
+	Bitwise WindowSwitcherFlag;
+	
 	passwordwindow = g_slice_new(PasswordWindow);
 	mainmenuwindow = g_slice_new(MainMenuWindow);
 	newtranswindow = g_slice_new(NewTransWindow);
 	historywindow = g_slice_new(HistoryWindow);
+	settlementwindow = g_slice_new(SettlementWindow);
+	optionwindow = g_slice_new(OptionWindow);
 	
 	gtk_init(&argc,&argv);
 
+	if(init_option_window() == FALSE) return 1;
+	if(init_settlement_window() == FALSE) return 1;
 	if(init_history_window() == FALSE) return 1;
 	if(init_newtrans_window() == FALSE) return 1;
 	if(init_mainmenu_window() == FALSE) return 1;
 	if(init_pwd_window() == FALSE) return 1;
 	
-	WindowSwitcher(	TRUE,	//password window
-					FALSE,	//gboolean f_mainmenu_window, 
-					FALSE,	//new trans window
-					FALSE,	//history window
-					FALSE,	//settlement window
-					FALSE);	//option window
+	f_status_window = FALSE;	//hide all window
+	f_password_window = TRUE;	//show password window
+	WindowSwitcher(WindowSwitcherFlag);
 	
 	gtk_main();
 
@@ -29,6 +32,8 @@ int main(int argc, char *argv[])
 	g_slice_free(MainMenuWindow, mainmenuwindow);
 	g_slice_free(NewTransWindow, newtranswindow);
 	g_slice_free(HistoryWindow, historywindow);
+	g_slice_free(SettlementWindow, settlementwindow);
+	g_slice_free(OptionWindow, optionwindow);
 	
 	return 0;
 }

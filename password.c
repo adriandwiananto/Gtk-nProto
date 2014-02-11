@@ -66,12 +66,11 @@ void read_pwd_entry()
 	{
 		/*password entry handler goes in here*/
 		printf("Password NOT EMPTY\n");
-		WindowSwitcher(	FALSE,	//password window
-						TRUE,	//gboolean f_mainmenu_window, 
-						FALSE,	//new trans window
-						FALSE,	//history window
-						FALSE,	//settlement window
-						FALSE);	//option window
+		
+		Bitwise WindowSwitcherFlag;
+		f_status_window = FALSE;
+		f_mainmenu_window = TRUE;
+		WindowSwitcher(WindowSwitcherFlag);
 	}
 }
 
