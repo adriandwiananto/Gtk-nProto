@@ -72,6 +72,14 @@ typedef struct
 	GtkWidget *confirm_entry;
 }OptionWindow;
 	
+typedef struct
+{
+	GtkWidget *window;
+	GtkWidget *ACCN_entry;
+	GtkWidget *new_entry;
+	GtkWidget *confirm_entry;
+}RegistrationWindow;
+
 /*callback function*/
 void on_pwd_ok_button_clicked (GtkButton *button);
 void on_pwd_cancel_button_clicked (GtkButton *button);
@@ -96,6 +104,7 @@ gboolean init_newtrans_window();
 gboolean init_history_window();
 gboolean init_settlement_window();
 gboolean init_option_window();
+gboolean init_registration_window();
 
 /*other function*/
 void read_pwd_entry();
@@ -119,5 +128,6 @@ EXTERN NewTransWindow *newtranswindow;
 EXTERN HistoryWindow *historywindow;
 EXTERN SettlementWindow *settlementwindow;
 EXTERN OptionWindow *optionwindow;
+EXTERN RegistrationWindow *registrationwindow;
 
 #endif

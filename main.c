@@ -12,9 +12,11 @@ int main(int argc, char *argv[])
 	historywindow = g_slice_new(HistoryWindow);
 	settlementwindow = g_slice_new(SettlementWindow);
 	optionwindow = g_slice_new(OptionWindow);
+	registrationwindow = g_slice_new(RegistrationWindow);
 	
 	gtk_init(&argc,&argv);
 
+	if(init_registration_window() == FALSE) return 1;
 	if(init_option_window() == FALSE) return 1;
 	if(init_settlement_window() == FALSE) return 1;
 	if(init_history_window() == FALSE) return 1;
@@ -34,6 +36,7 @@ int main(int argc, char *argv[])
 	g_slice_free(HistoryWindow, historywindow);
 	g_slice_free(SettlementWindow, settlementwindow);
 	g_slice_free(OptionWindow, optionwindow);
+	g_slice_free(RegistrationWindow, registrationwindow);
 	
 	return 0;
 }

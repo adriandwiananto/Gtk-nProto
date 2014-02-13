@@ -41,7 +41,7 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 
 	if(f_settlement_window == TRUE)
 	{
-		gchar *settlement_balance = "Rp. 50.000";
+		gchar *settlement_balance = "Rp50.000";
 		gtk_label_set_text((GtkLabel *)settlementwindow->total_label, settlement_balance);
 		
 		gtk_widget_show(settlementwindow->window);
