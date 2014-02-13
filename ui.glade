@@ -632,7 +632,7 @@
             <property name="can_focus">False</property>
             <property name="margin_left">5</property>
             <property name="margin_right">5</property>
-            <property name="label" translatable="yes">Old Password:</property>
+            <property name="label" translatable="yes">Account ID:</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -668,6 +668,7 @@
             <property name="halign">center</property>
             <property name="valign">center</property>
             <property name="margin_left">5</property>
+            <signal name="clicked" handler="on_registration_request_button_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -686,6 +687,7 @@
             <property name="halign">center</property>
             <property name="valign">center</property>
             <property name="margin_left">5</property>
+            <signal name="clicked" handler="on_registration_cancel_button_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">1</property>
