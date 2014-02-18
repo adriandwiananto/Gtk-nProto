@@ -19,10 +19,12 @@ gboolean init_registration_window()
 	}
 
 	/* get the widgets which will be referenced in callbacks */
-	settlementwindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "settlement_window"));
-	settlementwindow->total_label = GTK_WIDGET (gtk_builder_get_object (builder, "settlement_balance_label"));
+	registrationwindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "registration_window"));
+	registrationwindow->ACCN_entry = GTK_WIDGET (gtk_builder_get_object (builder, "registration_ACCN_entry"));
+	registrationwindow->new_entry = GTK_WIDGET (gtk_builder_get_object (builder, "registration_new_entry"));
+	registrationwindow->confirm_entry = GTK_WIDGET (gtk_builder_get_object (builder, "registration_confirm_entry"));
 
-	gtk_builder_connect_signals (builder, settlementwindow);
+	gtk_builder_connect_signals (builder, registrationwindow);
 	g_object_unref(G_OBJECT(builder));
 	
 	return TRUE;
@@ -31,11 +33,32 @@ gboolean init_registration_window()
 /* Callback for Request button in registration window */
 void on_registration_request_button_clicked(GtkButton *button)
 {
-	
+	const gchar *new_pwd_entry, *confirm_pwd_entry, *new_ACCN_entry;
+
+	/*read text entry*/
+	new_pwd_entry = gtk_entry_get_text(GTK_ENTRY(registrationwindow->new_entry));
+	confirm_pwd_entry = gtk_entry_get_text(GTK_ENTRY(registrationwindow->confirm_entry));
+
+	if(strcmp(new_pwd_entry,""))
+	{
+		if(!strcmp(new_pwd_entry, confirm_pwd_entry))
+		{
+			new_ACCN_entry = gtk_entry_get_text(GTK_ENTRY(registrationwindow->ACCN_entry));
+			//~ create_new_config_file();
+			notification_message("Registration Success! Restart the application");
+			gtk_main_quit();
+		}
+
+	}
+	else
+	{
+		gtk_entry_set_text((GtkEntry *)registrationwindow->new_entry, "");
+		gtk_entry_set_text((GtkEntry *)registrationwindow->confirm_entry, "");
+	}
 }
 
 /* Callback for Cancel button in registration window */
-void on_registration_cancel_button(GtkButton *button)
+void on_registration_cancel_button_clicked(GtkButton *button)
 {
 	gtk_main_quit();
 }

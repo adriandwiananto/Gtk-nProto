@@ -16,6 +16,7 @@
 #define f_history_window		WindowSwitcherFlag.bit3
 #define f_settlement_window		WindowSwitcherFlag.bit4
 #define f_option_window		 	WindowSwitcherFlag.bit5
+#define f_registration_window	WindowSwitcherFlag.bit6
 #define f_status_window 		WindowSwitcherFlag.status
 
 typedef union
@@ -106,9 +107,13 @@ gboolean init_settlement_window();
 gboolean init_option_window();
 gboolean init_registration_window();
 
+/*libconfig function*/
+int config_checking();
+
 /*other function*/
 void read_pwd_entry();
 void error_message (const gchar *message);
+void notification_message (const gchar *message);
 void WindowSwitcher(Bitwise WindowSwitcherFlag);
 int random_number_generator(int min_number, int max_number);
 void parse_log_file();

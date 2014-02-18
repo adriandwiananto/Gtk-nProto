@@ -12,6 +12,8 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 	
 	(f_option_window == TRUE)?gtk_widget_show(optionwindow->window):gtk_widget_hide(optionwindow->window);
 	
+	(f_registration_window == TRUE)?gtk_widget_show(registrationwindow->window):gtk_widget_hide(registrationwindow->window);
+	
 	if(f_newtrans_window == TRUE)
 	{
 		gchar SESN_text[4];
