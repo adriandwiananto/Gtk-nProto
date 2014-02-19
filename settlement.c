@@ -37,6 +37,7 @@ void on_settlement_claim_button_clicked()
 /* Callback for Cancel button in settlement window */
 void on_settlement_cancel_button_clicked()
 {
+	/*open main menu window only*/
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;
 	f_mainmenu_window = TRUE;

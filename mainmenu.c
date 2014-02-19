@@ -30,6 +30,7 @@ gboolean init_mainmenu_window()
 /* callback for New Trans button in main menu window */
 void on_mm_new_trans_button_clicked ()
 {
+	/*open new trans window*/
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;
 	f_mainmenu_window = TRUE;
@@ -40,6 +41,7 @@ void on_mm_new_trans_button_clicked ()
 /* callback for History button in main menu window */
 void on_mm_history_button_clicked ()
 {
+	/*open history window*/
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;
 	f_mainmenu_window = TRUE;
@@ -50,6 +52,7 @@ void on_mm_history_button_clicked ()
 /* callback for Settlement button in main menu window */
 void on_mm_settlement_button_clicked ()
 {
+	/*open settlement window*/
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;
 	f_mainmenu_window = TRUE;
@@ -60,6 +63,7 @@ void on_mm_settlement_button_clicked ()
 /* callback for Option button in main menu window */
 void on_mm_option_button_clicked ()
 {
+	/*open option window*/
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;
 	f_mainmenu_window = TRUE;
@@ -70,5 +74,6 @@ void on_mm_option_button_clicked ()
 /* callback for Exit button in main menu window */
 void on_mm_exit_button_clicked ()
 {
+	/*exit application*/
 	gtk_main_quit();
 }

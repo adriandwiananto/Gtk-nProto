@@ -51,17 +51,29 @@ void on_registration_request_button_clicked()
 {
 	const gchar *new_pwd_entry, *confirm_pwd_entry, *new_ACCN_entry;
 	
+	/* hashed password+salt written in hex as string
+	 * array size must be (2*hash_length)+1
+	 * every byte is represented with 2 character hence 2*hash_length
+	 * +1 is for null
+	 */ 
+	char hashed[(SHA256_DIGEST_LENGTH*2)+1];
+	
 	/*read text entry*/
 	new_pwd_entry = gtk_entry_get_text(GTK_ENTRY(registrationwindow->new_entry));
 	confirm_pwd_entry = gtk_entry_get_text(GTK_ENTRY(registrationwindow->confirm_entry));
 	new_ACCN_entry = gtk_entry_get_text(GTK_ENTRY(registrationwindow->ACCN_entry));
 	
-	if(strcmp(new_pwd_entry,"") && strcmp(new_ACCN_entry, ""))
+	/*make sure text entry is not empty*/
+	if(strcmp(new_pwd_entry,"") || strcmp(confirm_pwd_entry,"") || strcmp(new_ACCN_entry, ""))
 	{
+		/*make sure new password and confirmed password is same*/
 		if(!strcmp(new_pwd_entry, confirm_pwd_entry))
 		{
+			/*convert ACCN type from string to long int (64 byte)*/
 			uintmax_t ACCN;
 			ACCN = strtoumax(new_ACCN_entry, NULL, 10);
+			
+			/*make sure ACCN value is not greater than maximum of 6 bytes value*/
 			if (ACCN >= 0xFFFFFFFFFFFF)
 			{
 				error_message("Account ID value error");
@@ -69,9 +81,14 @@ void on_registration_request_button_clicked()
 				gtk_entry_set_text((GtkEntry *)registrationwindow->confirm_entry, "");
 				gtk_entry_set_text((GtkEntry *)registrationwindow->ACCN_entry, "");
 			}
-			else
+			else /*user input valid data to all text entry*/
 			{
-				if(!create_new_config_file(ACCN, confirm_pwd_entry))
+				/*hash password and use ACCN as salt*/
+				passwordhashing(hashed, confirm_pwd_entry, new_ACCN_entry);
+				printf("hashed: %s\n", hashed);
+
+				/*create new config file (with error checking)*/
+				if(!create_new_config_file(ACCN, (const char *)hashed))
 				{
 					error_message("Error creating config file");
 				}
@@ -84,7 +101,7 @@ void on_registration_request_button_clicked()
 		}
 
 	}
-	else
+	else /*if one of the text entry is empty, clear both password entry*/
 	{
 		gtk_entry_set_text((GtkEntry *)registrationwindow->new_entry, "");
 		gtk_entry_set_text((GtkEntry *)registrationwindow->confirm_entry, "");

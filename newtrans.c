@@ -31,6 +31,7 @@ gboolean init_newtrans_window()
 /* callback for Cancel button in new trans window */
 void on_new_trans_cancel_button_clicked ()
 {
+	/*open main menu window only*/
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;
 	f_mainmenu_window = TRUE;

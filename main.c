@@ -4,9 +4,11 @@
 	
 int main(int argc, char *argv[])
 {	
+	/* local variable declaration */
 	Bitwise WindowSwitcherFlag;
 	int config_status = 0; // -1 = config tampered!, 1 = config ok, 2 = config empty
 	
+	/* allocate memory to global struct */
 	passwordwindow = g_slice_new(PasswordWindow);
 	mainmenuwindow = g_slice_new(MainMenuWindow);
 	newtranswindow = g_slice_new(NewTransWindow);
@@ -15,10 +17,13 @@ int main(int argc, char *argv[])
 	optionwindow = g_slice_new(OptionWindow);
 	registrationwindow = g_slice_new(RegistrationWindow);
 	
+	/* check config integrity */
 	config_status = config_checking();
 	
+	/* gtk start */
 	gtk_init(&argc,&argv);
 
+	/* create all gtk window */
 	if(init_registration_window() == FALSE) return 1;
 	if(init_option_window() == FALSE) return 1;
 	if(init_settlement_window() == FALSE) return 1;
@@ -27,6 +32,7 @@ int main(int argc, char *argv[])
 	if(init_mainmenu_window() == FALSE) return 1;
 	if(init_pwd_window() == FALSE) return 1;
 	
+	/* open gtk window according to the result of config file checking */
 	switch(config_status)
 	{
 		case -1:
@@ -44,9 +50,11 @@ int main(int argc, char *argv[])
 			WindowSwitcher(WindowSwitcherFlag);
 			break;
 	}
-			
+	
+	/* start gtk */		
 	gtk_main();
 
+	/* free memory for global struct */
 	g_slice_free(PasswordWindow, passwordwindow);
 	g_slice_free(MainMenuWindow, mainmenuwindow);
 	g_slice_free(NewTransWindow, newtranswindow);
@@ -91,10 +99,7 @@ void
 notification_message (const gchar *message)
 {
         GtkWidget               *dialog;
-        
-        /* log to terminal window */
-        //~ g_warning ("%s",message);
-        
+             
         /* create an error message dialog and display modally to the user */
         dialog = gtk_message_dialog_new (NULL, 
                                          GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,

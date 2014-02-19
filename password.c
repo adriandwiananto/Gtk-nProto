@@ -52,21 +52,25 @@ void on_pwd_entry_activate ()
 void read_pwd_entry()
 {
 	const gchar *pwd_entry_text;
+	
 	/*read text entry*/
 	pwd_entry_text = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
-	printf("Password: %s\n", pwd_entry_text);
 	
-	if(!strcmp(pwd_entry_text, ""))	//empty password, need another input attempt
+	if(!strcmp(pwd_entry_text, ""))	//empty password entry
 	{
 		/*clear text entry*/
-		printf("Password EMPTY\n");
 		gtk_entry_set_text((GtkEntry *)passwordwindow->text_entry, "");
 	}
-	else //assuming entered password is correct
+	else //password entry not empty
 	{
 		/*password entry handler goes in here*/
-		printf("Password NOT EMPTY\n");
+		//~ get_config_entry("application.ACCN");
+		//TO DO: 	get ACCN from config
+		//			convert ACCN from INT64 to string
+		//			hash entered password
+		//			compare with password in config
 		
+		/*switch window to main menu*/
 		Bitwise WindowSwitcherFlag;
 		f_status_window = FALSE;
 		f_mainmenu_window = TRUE;

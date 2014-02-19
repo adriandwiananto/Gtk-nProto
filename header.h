@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <openssl/sha.h>
 
 #ifndef _NPROTO_
 #define _NPROTO_
@@ -113,6 +114,9 @@ gboolean init_registration_window();
 /*libconfig function*/
 int config_checking();
 int create_new_config_file(uintmax_t ACCN, const char* password);
+
+/*crypto function*/
+void passwordhashing(char *hashed, const gchar *password, const gchar *salt);
 
 /*other function*/
 void read_pwd_entry();

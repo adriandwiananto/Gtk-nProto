@@ -39,6 +39,7 @@ void on_option_ok_button_clicked()
 /* Callback for Cancel button in option window */
 void on_option_cancel_button_clicked()
 {
+	/*open main menu window only*/
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;
 	f_mainmenu_window = TRUE;

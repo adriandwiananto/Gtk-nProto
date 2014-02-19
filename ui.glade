@@ -387,6 +387,7 @@
             <property name="can_focus">True</property>
             <property name="margin_right">5</property>
             <property name="margin_top">5</property>
+            <property name="max_length">128</property>
             <property name="visibility">False</property>
             <property name="invisible_char">•</property>
             <property name="invisible_char_set">True</property>
@@ -487,6 +488,7 @@
             <property name="can_focus">True</property>
             <property name="margin_right">5</property>
             <property name="margin_top">5</property>
+            <property name="max_length">128</property>
             <property name="visibility">False</property>
             <property name="invisible_char">•</property>
             <property name="invisible_char_set">True</property>
@@ -504,6 +506,7 @@
             <property name="can_focus">True</property>
             <property name="margin_right">5</property>
             <property name="margin_top">5</property>
+            <property name="max_length">128</property>
             <property name="visibility">False</property>
             <property name="invisible_char">•</property>
             <property name="invisible_char_set">True</property>
@@ -552,6 +555,7 @@
             <property name="can_focus">True</property>
             <property name="margin_right">5</property>
             <property name="margin_top">5</property>
+            <property name="max_length">128</property>
             <property name="visibility">False</property>
             <property name="invisible_char">•</property>
             <signal name="activate" handler="on_pwd_entry_activate" swapped="no"/>
@@ -750,6 +754,7 @@
             <property name="can_focus">True</property>
             <property name="margin_right">5</property>
             <property name="margin_top">5</property>
+            <property name="max_length">128</property>
             <property name="visibility">False</property>
             <property name="invisible_char">•</property>
             <property name="invisible_char_set">True</property>

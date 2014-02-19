@@ -6,14 +6,19 @@ Function for switching active window
 
 void WindowSwitcher(Bitwise WindowSwitcherFlag)
 {
+	/*password window switcher*/
 	(f_password_window == TRUE)?gtk_widget_show(passwordwindow->window):gtk_widget_hide(passwordwindow->window);
 	
+	/*main menu window switcher*/
 	(f_mainmenu_window == TRUE)?gtk_widget_show(mainmenuwindow->window):gtk_widget_hide(mainmenuwindow->window);
 	
+	/*option window switcher*/
 	(f_option_window == TRUE)?gtk_widget_show(optionwindow->window):gtk_widget_hide(optionwindow->window);
 	
+	/*registration window switcher*/
 	(f_registration_window == TRUE)?gtk_widget_show(registrationwindow->window):gtk_widget_hide(registrationwindow->window);
 	
+	/*new trans window switcher*/
 	if(f_newtrans_window == TRUE)
 	{
 		gchar SESN_text[4];
@@ -31,6 +36,7 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 		gtk_widget_hide(newtranswindow->window);	
 	}
 	
+	/*history window switcher*/
 	if(f_history_window == TRUE)
 	{
 		parse_log_file();
@@ -41,6 +47,7 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 		gtk_widget_hide(historywindow->window);	
 	}
 
+	/*settlement window switcher*/
 	if(f_settlement_window == TRUE)
 	{
 		gchar *settlement_balance = "Rp50.000";

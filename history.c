@@ -38,6 +38,7 @@ void on_history_saveas_button_clicked ()
 /* callback for Close button in history window */
 void on_history_close_button_clicked ()
 {
+	/*open main menu window only*/
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;
 	f_mainmenu_window = TRUE;
@@ -54,14 +55,18 @@ void parse_log_file()
 	size_t len = 0;
 	ssize_t read;
 	
+	/*open file with filename "log"*/
 	logfile = fopen("log","r");
 	if(logfile == NULL)error_message("fail to open log file");
 	
+	/*read every line of the file until EOF (-1)*/
 	while((read = getline(&line, &len, logfile)) != -1)
 	{
+		/*write line to gtk tree*/
 		write_to_history_tree(read, line, lognum, &iter);
 		lognum++;
 	}
+	
 	free(line);
 	fclose(logfile);
 }
