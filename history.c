@@ -30,13 +30,13 @@ gboolean init_history_window()
 }
 
 /* callback for Save As button in history window */
-void on_history_saveas_button_clicked (GtkButton *button)
+void on_history_saveas_button_clicked ()
 {
 	
 }
 
 /* callback for Close button in history window */
-void on_history_close_button_clicked (GtkButton *button)
+void on_history_close_button_clicked ()
 {
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;

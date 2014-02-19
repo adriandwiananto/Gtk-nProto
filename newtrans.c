@@ -29,7 +29,7 @@ gboolean init_newtrans_window()
 }
 
 /* callback for Cancel button in new trans window */
-void on_new_trans_cancel_button_clicked (GtkButton *button)
+void on_new_trans_cancel_button_clicked ()
 {
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;

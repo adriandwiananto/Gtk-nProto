@@ -29,21 +29,21 @@ gboolean init_pwd_window()
 }
 
 /* callback for OK button in password prompt window */
-void on_pwd_ok_button_clicked (GtkButton *button)
+void on_pwd_ok_button_clicked ()
 {
 	printf("OK BUTTON CLICKED \n");
 	read_pwd_entry();
 }
 
 /* callback for Cancel button in password prompt window */
-void on_pwd_cancel_button_clicked (GtkButton *button)
+void on_pwd_cancel_button_clicked ()
 {
 	printf("CANCEL BUTTON CLICKED \n");	
 	gtk_main_quit();
 }
 
 /* callback for pressing enter in password prompt window text box */
-void on_pwd_entry_activate (GtkButton *button)
+void on_pwd_entry_activate ()
 {
 	printf("password entered\n");
 	read_pwd_entry();

@@ -105,5 +105,4 @@ notification_message (const gchar *message)
         gtk_window_set_title (GTK_WINDOW (dialog), "Notification");
         gtk_dialog_run (GTK_DIALOG (dialog));
         gtk_widget_destroy (dialog);
-        //~ gtk_main_quit();
 }

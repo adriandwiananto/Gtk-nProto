@@ -29,13 +29,13 @@ gboolean init_settlement_window()
 }
 
 /* Callback for Claim button in settlement window */
-void on_settlement_claim_button_clicked(GtkButton *button)
+void on_settlement_claim_button_clicked()
 {
 	
 }
 
 /* Callback for Cancel button in settlement window */
-void on_settlement_cancel_button_clicked(GtkButton *button)
+void on_settlement_cancel_button_clicked()
 {
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;

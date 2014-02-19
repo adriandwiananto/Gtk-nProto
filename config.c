@@ -29,3 +29,12 @@ int config_checking()
 		}
 	}
 }	
+
+int create_new_config_file(uintmax_t ACCN, const char* password)
+{
+	printf("ACCN: %ju\n",ACCN);
+	printf("password: %s\n",password);
+	return 1;
+}
+
+

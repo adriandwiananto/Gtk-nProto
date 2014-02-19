@@ -30,23 +30,57 @@ gboolean init_registration_window()
 	return TRUE;
 }
 
+void on_registration_ACCN_entry_insert_text(GtkEditable *buffer, gchar *new_text, gint new_text_length, gint *position, gpointer data)
+{
+	int i;
+	guint sigid;
+
+	/* Only allow 0-9 to be written to the entry */
+	for (i = 0; i < new_text_length; i++) {
+		if (new_text[i] < '0' || new_text[i] > '9') {
+			sigid = g_signal_lookup("insert-text",
+						G_OBJECT_TYPE(buffer));
+			g_signal_stop_emission(buffer, sigid, 0);
+			return;
+		}
+	}
+}
+
 /* Callback for Request button in registration window */
-void on_registration_request_button_clicked(GtkButton *button)
+void on_registration_request_button_clicked()
 {
 	const gchar *new_pwd_entry, *confirm_pwd_entry, *new_ACCN_entry;
-
+	
 	/*read text entry*/
 	new_pwd_entry = gtk_entry_get_text(GTK_ENTRY(registrationwindow->new_entry));
 	confirm_pwd_entry = gtk_entry_get_text(GTK_ENTRY(registrationwindow->confirm_entry));
-
-	if(strcmp(new_pwd_entry,""))
+	new_ACCN_entry = gtk_entry_get_text(GTK_ENTRY(registrationwindow->ACCN_entry));
+	
+	if(strcmp(new_pwd_entry,"") && strcmp(new_ACCN_entry, ""))
 	{
 		if(!strcmp(new_pwd_entry, confirm_pwd_entry))
 		{
-			new_ACCN_entry = gtk_entry_get_text(GTK_ENTRY(registrationwindow->ACCN_entry));
-			//~ create_new_config_file();
-			notification_message("Registration Success! Restart the application");
-			gtk_main_quit();
+			uintmax_t ACCN;
+			ACCN = strtoumax(new_ACCN_entry, NULL, 10);
+			if (ACCN >= 0xFFFFFFFFFFFF)
+			{
+				error_message("Account ID value error");
+				gtk_entry_set_text((GtkEntry *)registrationwindow->new_entry, "");
+				gtk_entry_set_text((GtkEntry *)registrationwindow->confirm_entry, "");
+				gtk_entry_set_text((GtkEntry *)registrationwindow->ACCN_entry, "");
+			}
+			else
+			{
+				if(!create_new_config_file(ACCN, confirm_pwd_entry))
+				{
+					error_message("Error creating config file");
+				}
+				else
+				{
+					notification_message("Registration Success! Restart the application");
+					gtk_main_quit();
+				}
+			}
 		}
 
 	}
@@ -58,7 +92,7 @@ void on_registration_request_button_clicked(GtkButton *button)
 }
 
 /* Callback for Cancel button in registration window */
-void on_registration_cancel_button_clicked(GtkButton *button)
+void on_registration_cancel_button_clicked()
 {
 	gtk_main_quit();
 }

@@ -645,22 +645,6 @@
           </packing>
         </child>
         <child>
-          <object class="GtkEntry" id="registration_ACCN_entry">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="margin_right">5</property>
-            <property name="margin_top">5</property>
-            <property name="invisible_char">•</property>
-            <property name="invisible_char_set">True</property>
-          </object>
-          <packing>
-            <property name="left_attach">1</property>
-            <property name="top_attach">0</property>
-            <property name="width">1</property>
-            <property name="height">1</property>
-          </packing>
-        </child>
-        <child>
           <object class="GtkButton" id="registration_request_button">
             <property name="label" translatable="yes">Request</property>
             <property name="width_request">100</property>
@@ -773,6 +757,24 @@
           <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">2</property>
+            <property name="width">1</property>
+            <property name="height">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkEntry" id="registration_ACCN_entry">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="margin_right">5</property>
+            <property name="margin_top">5</property>
+            <property name="invisible_char">•</property>
+            <property name="invisible_char_set">True</property>
+            <property name="input_purpose">number</property>
+            <signal name="insert-text" handler="on_registration_ACCN_entry_insert_text" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">0</property>
             <property name="width">1</property>
             <property name="height">1</property>
           </packing>

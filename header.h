@@ -3,6 +3,9 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <errno.h>
+#include <inttypes.h>
 
 #ifndef _NPROTO_
 #define _NPROTO_
@@ -82,21 +85,21 @@ typedef struct
 }RegistrationWindow;
 
 /*callback function*/
-void on_pwd_ok_button_clicked (GtkButton *button);
-void on_pwd_cancel_button_clicked (GtkButton *button);
-void on_pwd_entry_activate (GtkButton *button);
-void on_mm_new_trans_button_clicked (GtkButton *button);
-void on_mm_history_button_clicked (GtkButton *button);
-void on_mm_settlement_button_clicked (GtkButton *button);
-void on_mm_option_button_clicked (GtkButton *button);
-void on_mm_exit_button_clicked (GtkButton *button);
-void on_new_trans_cancel_button_clicked (GtkButton *button);
-void on_history_saveas_button_clicked (GtkButton *button);
-void on_history_close_button_clicked (GtkButton *button);
-void on_settlement_claim_button_clicked (GtkButton *button);
-void on_settlement_cancel_button_clicked (GtkButton *button);
-void on_option_ok_button_clicked(GtkButton *button);
-void on_option_cancel_button_clicked(GtkButton *button);
+void on_pwd_ok_button_clicked ();
+void on_pwd_cancel_button_clicked ();
+void on_pwd_entry_activate ();
+void on_mm_new_trans_button_clicked ();
+void on_mm_history_button_clicked ();
+void on_mm_settlement_button_clicked ();
+void on_mm_option_button_clicked ();
+void on_mm_exit_button_clicked ();
+void on_new_trans_cancel_button_clicked ();
+void on_history_saveas_button_clicked ();
+void on_history_close_button_clicked ();
+void on_settlement_claim_button_clicked ();
+void on_settlement_cancel_button_clicked ();
+void on_option_ok_button_clicked();
+void on_option_cancel_button_clicked();
 
 /*window init function*/
 gboolean init_pwd_window();
@@ -109,6 +112,7 @@ gboolean init_registration_window();
 
 /*libconfig function*/
 int config_checking();
+int create_new_config_file(uintmax_t ACCN, const char* password);
 
 /*other function*/
 void read_pwd_entry();
