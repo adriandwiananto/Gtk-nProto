@@ -31,27 +31,33 @@ gboolean init_pwd_window()
 /* callback for OK button in password prompt window */
 void on_pwd_ok_button_clicked ()
 {
-	printf("OK BUTTON CLICKED \n");
 	read_pwd_entry();
 }
 
 /* callback for Cancel button in password prompt window */
 void on_pwd_cancel_button_clicked ()
 {
-	printf("CANCEL BUTTON CLICKED \n");	
 	gtk_main_quit();
 }
 
 /* callback for pressing enter in password prompt window text box */
 void on_pwd_entry_activate ()
 {
-	printf("password entered\n");
 	read_pwd_entry();
 }
 
 void read_pwd_entry()
 {
 	const gchar *pwd_entry_text;
+	uintmax_t ACCN;
+
+	/*declare and clear array for string container*/
+	char hashedpassword[(2*SHA256_DIGEST_LENGTH)+1];
+	memset(hashedpassword, 0, (2*SHA256_DIGEST_LENGTH)+1);
+	char pwd_in_setting[(2*SHA256_DIGEST_LENGTH)+1];
+	memset(pwd_in_setting, 0, (2*SHA256_DIGEST_LENGTH)+1);
+	gchar ACCNstr[32];
+	memset(ACCNstr, 0, 32);
 	
 	/*read text entry*/
 	pwd_entry_text = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
@@ -63,18 +69,70 @@ void read_pwd_entry()
 	}
 	else //password entry not empty
 	{
-		/*password entry handler goes in here*/
-		//~ get_config_entry("application.ACCN");
-		//TO DO: 	get ACCN from config
-		//			convert ACCN from INT64 to string
-		//			hash entered password
-		//			compare with password in config
-		
-		/*switch window to main menu*/
-		Bitwise WindowSwitcherFlag;
-		f_status_window = FALSE;
-		f_mainmenu_window = TRUE;
-		WindowSwitcher(WindowSwitcherFlag);
+		/*get ACCN from config*/
+		if(get_ACCN_from_config(&ACCN))
+		{
+			/*convert ACCN from INT64 to string*/
+			sprintf(ACCNstr, "%ju", ACCN);
+			
+			/*hash entered password*/
+			passwordhashing(hashedpassword, pwd_entry_text, ACCNstr);
+			
+			/*compare with password in config*/
+			if(get_pwd_from_config(pwd_in_setting))
+			{
+				/*debugging purpose*/
+				/*printf("pwd entered: %s \n", hashedpassword);
+				printf("pwd to compare: %s \n", pwd_in_setting);
+
+				int i=0;
+				int j=0;
+				
+				while(pwd_in_setting[j]!=0 || hashedpassword[i]!=0)
+				{
+					printf("hashedpassword[%d]:%.02X\t\tpwd_in_setting[%d]:%.02X\n",i,hashedpassword[i],j,pwd_in_setting[j]);
+					if(hashedpassword[i]!=0)i++;
+					if(pwd_in_setting[j]!=0)j++;
+				}*/
+				
+				/*entered password = stored password in config*/
+				if(!strcmp(hashedpassword, pwd_in_setting))
+				{
+					/*switch window to main menu*/
+					Bitwise WindowSwitcherFlag;
+					f_status_window = FALSE;
+					f_mainmenu_window = TRUE;
+					WindowSwitcher(WindowSwitcherFlag);
+				}
+				else
+				{
+					gchar err_msg[50];
+					pass_attempt++;
+					gtk_entry_set_text((GtkEntry *)passwordwindow->text_entry, "");
+					sprintf(err_msg, "incorrect password! %d of 5 attempt", pass_attempt);
+					error_message(err_msg);
+					if(pass_attempt >= 5)
+					{
+						pass_attempt = 0;
+						if(!remove("config.cfg"))printf("maximum attempt reached, config file deleted!!\n");
+						else printf("error deleting config file");
+						gtk_main_quit();
+					}
+				}
+					
+				
+			}
+			else
+			{
+				error_message("invalid config file!!");
+				gtk_main_quit();
+			}
+		}
+		else
+		{
+			error_message("invalid config file!!");
+			gtk_main_quit();
+		}
 	}
 }
 

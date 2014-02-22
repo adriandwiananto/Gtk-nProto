@@ -1,9 +1,11 @@
 #include "header.h"
 
+#define COMMAND_LEN 20
+#define DATA_SIZE 512
+
 /*
 Function for switching active window
 */
-
 void WindowSwitcher(Bitwise WindowSwitcherFlag)
 {
 	/*password window switcher*/
@@ -30,6 +32,7 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 		gtk_widget_show(newtranswindow->window);
 		
 		//NFC polling goes in here
+		nfc_poll_child_process();
 	}
 	else
 	{

@@ -69,4 +69,58 @@ int create_new_config_file(uintmax_t ACCN, const char* password)
 	return 1;
 }
 
+int get_ACCN_from_config(uintmax_t *ACCN)
+{
+	config_t cfg;
 
+	config_init(&cfg);
+
+	/* Read the file. If there is an error, report it and exit. */
+	if(! config_read_file(&cfg, "config.cfg"))
+	{
+		config_destroy(&cfg);
+		return 0;	//return error
+	}
+
+	/* Get ACCN. */
+	if(config_lookup_int64(&cfg, "application.ACCN", (long long int *)ACCN))
+	{
+		config_destroy(&cfg);
+		return 1;
+	}
+	else
+	{
+		fprintf(stderr, "No 'ACCN' setting in configuration file.\n");
+		config_destroy(&cfg);
+		return 0;
+	}
+}
+
+int get_pwd_from_config(char *pwdstr)
+{
+	const char *pwd_in_config;
+	config_t cfg;
+
+	config_init(&cfg);
+
+	/* Read the file. If there is an error, report it and exit. */
+	if(! config_read_file(&cfg, "config.cfg"))
+	{
+		config_destroy(&cfg);
+		return 0;	//return error
+	}
+
+	/* Get pwd. */
+	if(config_lookup_string(&cfg, "application.Pwd", &pwd_in_config))
+	{
+		memcpy(pwdstr, pwd_in_config, strlen(pwd_in_config));
+		config_destroy(&cfg);
+		return 1;
+	}
+	else
+	{
+		fprintf(stderr, "No 'Pwd' setting in configuration file.\n");
+		config_destroy(&cfg);
+		return 0;
+	}
+}

@@ -4,6 +4,9 @@
 	
 int main(int argc, char *argv[])
 {	
+	/* global variable initialization */
+	pass_attempt = 0;
+	
 	/* local variable declaration */
 	Bitwise WindowSwitcherFlag;
 	int config_status = 0; // -1 = config tampered!, 1 = config ok, 2 = config empty

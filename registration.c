@@ -64,7 +64,7 @@ void on_registration_request_button_clicked()
 	new_ACCN_entry = gtk_entry_get_text(GTK_ENTRY(registrationwindow->ACCN_entry));
 	
 	/*make sure text entry is not empty*/
-	if(strcmp(new_pwd_entry,"") || strcmp(confirm_pwd_entry,"") || strcmp(new_ACCN_entry, ""))
+	if(strcmp(new_pwd_entry,"") && strcmp(confirm_pwd_entry,"") && strcmp(new_ACCN_entry, ""))
 	{
 		/*make sure new password and confirmed password is same*/
 		if(!strcmp(new_pwd_entry, confirm_pwd_entry))

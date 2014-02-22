@@ -114,9 +114,17 @@ gboolean init_registration_window();
 /*libconfig function*/
 int config_checking();
 int create_new_config_file(uintmax_t ACCN, const char* password);
+int get_ACCN_from_config(uintmax_t *ACCN);
+int get_pwd_from_config(char *pwdstr);
 
 /*crypto function*/
 void passwordhashing(char *hashed, const gchar *password, const gchar *salt);
+
+/*spawn function*/
+void nfc_poll_child_process();
+gboolean cb_err_watch( GIOChannel *channel, GIOCondition cond);//, Data *data );
+gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond);//, Data *data );
+void cb_child_watch( GPid pid, gint status);//, Data *data );
 
 /*other function*/
 void read_pwd_entry();
@@ -134,7 +142,6 @@ void write_to_history_tree(ssize_t read, char* line, gint lognum, GtkTreeIter *i
 #endif
 
 /*global window variable*/
-//~ EXTERN Bitwise WindowSwitcher;
 EXTERN PasswordWindow *passwordwindow;
 EXTERN MainMenuWindow *mainmenuwindow;
 EXTERN NewTransWindow *newtranswindow;
@@ -142,5 +149,8 @@ EXTERN HistoryWindow *historywindow;
 EXTERN SettlementWindow *settlementwindow;
 EXTERN OptionWindow *optionwindow;
 EXTERN RegistrationWindow *registrationwindow;
+
+/*global variable*/
+EXTERN int pass_attempt;
 
 #endif
