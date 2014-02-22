@@ -28,9 +28,38 @@ gboolean init_newtrans_window()
 	return TRUE;
 }
 
+static void kill_nfc_poll_process()
+{
+	/*check child process availability, if exists kill it*/
+	if(kill(nfc_poll_pid, 0) >= 0)
+	{
+		if(kill(nfc_poll_pid, SIGTERM) >= 0)
+		{
+			printf("process killed with SIGTERM\n");
+		}
+		else
+		{
+			kill(nfc_poll_pid, SIGKILL);
+			printf("process killed with SIGKILL\n");
+		}
+	}
+	else printf("child process does not exists\n");
+}
+
+/* callback for destroy and delete-event new trans window */
+void on_new_trans_destroy_delete_event ()
+{
+	/*check child process availability, if exists kill it*/
+	kill_nfc_poll_process();
+	gtk_widget_hide(newtranswindow->window);
+}
+
 /* callback for Cancel button in new trans window */
 void on_new_trans_cancel_button_clicked ()
 {
+	/*check child process availability, if exists kill it*/
+	kill_nfc_poll_process();
+	
 	/*open main menu window only*/
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;
@@ -38,35 +67,48 @@ void on_new_trans_cancel_button_clicked ()
 	WindowSwitcher(WindowSwitcherFlag);
 }
 
+/* parse nfc data from child process */
+static void parse_nfc_data(gchar *nfcdata)
+{
+	gchar dataonly[128];
+	memset(dataonly, 0, 128);
+	memcpy(dataonly, nfcdata+5, strlen(nfcdata)-5);
+	printf("data only: %s\n",dataonly);
+}
+
 /* child process watch callback */
-void cb_child_watch( GPid pid, gint status)//, Data *data );
+static void cb_child_watch( GPid pid, gint status)//, Data *data );
 {
     /* Close pid */
     g_spawn_close_pid( pid );
 }
 
 /* io out watch callback */
-gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond)//, Data *data );
+static gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond)//, Data *data );
 {
     gchar *string;
     gsize  size;
-
+	GIOStatus status;
+	
     if( cond == G_IO_HUP )
     {
         g_io_channel_unref( channel );
         return( FALSE );
     }
 
-    g_io_channel_read_line( channel, &string, &size, NULL, NULL );
-    //gtk_text_buffer_insert_at_cursor( data->out, string, -1 );
-    fprintf(stdout,"%s",string);
-    g_free( string );
+    status = g_io_channel_read_line( channel, &string, &size, NULL, NULL );
+    
+    if(status == G_IO_STATUS_EOF)parse_nfc_data(string);
+    //~ gtk_text_buffer_insert_at_cursor( data->out, string, -1 );
+	else fprintf(stdout,"%s",string);
+	//~ parse_nfc_data(string);
+	g_free( string );
 
     return( TRUE );
 }
 
 /* io err watch callback */
-gboolean cb_err_watch( GIOChannel *channel, GIOCondition cond)//, Data *data );
+static gboolean cb_err_watch( GIOChannel *channel, GIOCondition cond)//, Data *data );
 {
     gchar *string;
     gsize  size;
@@ -79,7 +121,7 @@ gboolean cb_err_watch( GIOChannel *channel, GIOCondition cond)//, Data *data );
 
     g_io_channel_read_line( channel, &string, &size, NULL, NULL );
     //gtk_text_buffer_insert_at_cursor( data->err, string, -1 );
-    fprintf(stderr,"%s",string);
+    fprintf(stderr,"%s",string);    
     g_free( string );
 
     return( TRUE );
@@ -105,7 +147,8 @@ void nfc_poll_child_process()
         g_error( "SPAWN FAILED" );
         return;
     }
-
+	
+	nfc_poll_pid = pid;
     /* Add watch function to catch termination of the process. This function
      * will clean any remnants of process. */
     g_child_watch_add( pid, (GChildWatchFunc)cb_child_watch, NULL );

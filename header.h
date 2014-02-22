@@ -101,6 +101,8 @@ void on_settlement_claim_button_clicked ();
 void on_settlement_cancel_button_clicked ();
 void on_option_ok_button_clicked();
 void on_option_cancel_button_clicked();
+void on_new_trans_destroy_delete_event ();
+void on_new_trans_cancel_button_clicked ();
 
 /*window init function*/
 gboolean init_pwd_window();
@@ -122,9 +124,6 @@ void passwordhashing(char *hashed, const gchar *password, const gchar *salt);
 
 /*spawn function*/
 void nfc_poll_child_process();
-gboolean cb_err_watch( GIOChannel *channel, GIOCondition cond);//, Data *data );
-gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond);//, Data *data );
-void cb_child_watch( GPid pid, gint status);//, Data *data );
 
 /*other function*/
 void read_pwd_entry();
@@ -152,5 +151,6 @@ EXTERN RegistrationWindow *registrationwindow;
 
 /*global variable*/
 EXTERN int pass_attempt;
-
+EXTERN GPid nfc_poll_pid;
+EXTERN char nfc_data[128];
 #endif

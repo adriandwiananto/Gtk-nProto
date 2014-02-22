@@ -6,6 +6,7 @@ int main(int argc, char *argv[])
 {	
 	/* global variable initialization */
 	pass_attempt = 0;
+	memset(nfc_data,0,128);
 	
 	/* local variable declaration */
 	Bitwise WindowSwitcherFlag;
