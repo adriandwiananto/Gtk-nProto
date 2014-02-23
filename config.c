@@ -30,7 +30,7 @@ int config_checking()
 	}
 }	
 
-int create_new_config_file(uintmax_t ACCN, const char* password)
+gboolean create_new_config_file(uintmax_t ACCN, const char* password)
 {
 	//~ printf("ACCN: %ju\n",ACCN);
 	//~ printf("password: %s\n",password);
@@ -54,22 +54,32 @@ int create_new_config_file(uintmax_t ACCN, const char* password)
 	setting = config_setting_add(group, "Pwd", CONFIG_TYPE_STRING);
 	config_setting_set_string(setting, password);
 	
+	/*create LATS setting with INT64 type in application group*/
+	setting = config_setting_add(group, "LATS", CONFIG_TYPE_INT64);
+	config_setting_set_int64(setting, 0);
+	
+	/*create application group as root group*/
+	group = config_setting_add(root, "security", CONFIG_TYPE_GROUP);
+	
+	/*create ACCN setting with INT64 type in application group*/
+	setting = config_setting_add(group, "transaction", CONFIG_TYPE_STRING);
+	config_setting_set_string(setting, "EMPTY");
 	
 	/* Write out the new configuration. */
 	if(! config_write_file(&cfg, output_file))
 	{
 		fprintf(stderr, "Error while writing file.\n");
 		config_destroy(&cfg);
-		return 0;
+		return FALSE;
 	}
 
-	fprintf(stderr, "New configuration successfully written to: %s\n", output_file);
+	fprintf(stdout, "New configuration successfully written to: %s\n", output_file);
 
 	config_destroy(&cfg);
-	return 1;
+	return TRUE;
 }
 
-int get_ACCN_from_config(uintmax_t *ACCN)
+gboolean get_INT64_from_config(uintmax_t *value, const char *path)
 {
 	config_t cfg;
 
@@ -79,26 +89,26 @@ int get_ACCN_from_config(uintmax_t *ACCN)
 	if(! config_read_file(&cfg, "config.cfg"))
 	{
 		config_destroy(&cfg);
-		return 0;	//return error
+		return FALSE;	//return error
 	}
 
 	/* Get ACCN. */
-	if(config_lookup_int64(&cfg, "application.ACCN", (long long int *)ACCN))
+	if(config_lookup_int64(&cfg, path, (long long int *)value))
 	{
 		config_destroy(&cfg);
-		return 1;
+		return TRUE;
 	}
 	else
 	{
-		fprintf(stderr, "No 'ACCN' setting in configuration file.\n");
+		fprintf(stderr, "No mentioned setting in configuration file.\n");
 		config_destroy(&cfg);
-		return 0;
+		return FALSE;
 	}
 }
 
-int get_pwd_from_config(char *pwdstr)
+gboolean get_string_from_config(char *value, const char *path)
 {
-	const char *pwd_in_config;
+	const char *str_in_config;
 	config_t cfg;
 
 	config_init(&cfg);
@@ -107,20 +117,60 @@ int get_pwd_from_config(char *pwdstr)
 	if(! config_read_file(&cfg, "config.cfg"))
 	{
 		config_destroy(&cfg);
-		return 0;	//return error
+		return FALSE;	//return error
 	}
 
 	/* Get pwd. */
-	if(config_lookup_string(&cfg, "application.Pwd", &pwd_in_config))
+	if(config_lookup_string(&cfg, path, &str_in_config))
 	{
-		memcpy(pwdstr, pwd_in_config, strlen(pwd_in_config));
+		memcpy(value, str_in_config, strlen(str_in_config));
 		config_destroy(&cfg);
-		return 1;
+		return TRUE;
 	}
 	else
 	{
-		fprintf(stderr, "No 'Pwd' setting in configuration file.\n");
+		fprintf(stderr, "No mentioned setting in configuration file.\n");
 		config_destroy(&cfg);
-		return 0;
+		return FALSE;
+	}
+}
+
+gboolean write_string_to_config(char *value, const char *path)
+{
+	static const char *output_file = "config.cfg";
+	config_t cfg;
+	config_setting_t *setting;
+	
+	config_init(&cfg);
+
+	/* Read the file. If there is an error, report it and exit. */
+	if(! config_read_file(&cfg, "config.cfg"))
+	{
+		config_destroy(&cfg);
+		return FALSE;	//return error
+	}
+
+	setting = config_lookup(&cfg, path);
+	
+	/* write string */
+	if(config_setting_set_string(setting, value))
+	{
+		/* Write out the new configuration. */
+		if(! config_write_file(&cfg, output_file))
+		{
+			fprintf(stderr, "Error while writing file.\n");
+			config_destroy(&cfg);
+			return FALSE;
+		}
+
+		fprintf(stdout, "New configuration successfully written to: %s\n", output_file);
+			config_destroy(&cfg);
+		return FALSE;
+	}
+	else
+	{
+		fprintf(stderr, "No mentioned setting in configuration file.\n");
+		config_destroy(&cfg);
+		return FALSE;
 	}
 }

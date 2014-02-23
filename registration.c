@@ -88,13 +88,80 @@ void on_registration_request_button_clicked()
 				printf("hashed: %s\n", hashed);
 
 				/*create new config file (with error checking)*/
-				if(!create_new_config_file(ACCN, (const char *)hashed))
+				if(create_new_config_file(ACCN, (const char *)hashed) == FALSE)
 				{
 					error_message("Error creating config file");
 				}
 				else
 				{
 					notification_message("Registration Success! Restart the application");
+					
+					/* put registration ACCN to server
+					 * get key from server
+					 */
+					 
+					/* create rand dummy key */
+					unsigned char aes_key[KEY_LEN_BYTE];
+					RAND_bytes(aes_key, KEY_LEN_BYTE); 
+					
+					printf("aes key: ");
+					int i=0;
+					for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",aes_key[i]);
+					printf("\n\n");
+					
+					unsigned char KeyEncryptionKey[KEY_LEN_BYTE];
+					unsigned char wrapped_key[KEY_LEN_BYTE+8];
+					
+					/* derive key from password + ACCN */
+					if(derive_key(KeyEncryptionKey, new_pwd_entry, new_ACCN_entry, 10000) == FALSE)
+						error_message("KEK derivation error");
+					else
+					{
+						printf("derived key: ");
+						int i=0;
+						for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",KeyEncryptionKey[i]);
+						printf("\n\n");
+					}
+					
+					/* wrap key using KEK */
+					if(wrap_aes_key(wrapped_key, KeyEncryptionKey, aes_key) == FALSE)
+						error_message("error wrapping key");
+					else
+					{
+						printf("wrapped key: ");
+						int i=0;
+						for(i=0;i<KEY_LEN_BYTE+8;i++)printf("%.02X ",wrapped_key[i]);
+						printf("\n\n");
+					}
+					
+					/* convert wrapped key to base 64 and write to config */
+					char *wrapped_base64 = base64(wrapped_key, KEY_LEN_BYTE+8);
+					printf("wrapped key to write: %s\n\n",wrapped_base64);
+					write_string_to_config(wrapped_base64,"security.transaction");
+					
+					
+					
+					
+					/* starts of reverse process debugging purpose */
+					get_string_from_config(wrapped_base64,"security.transaction");
+					unsigned char *wrapped_unbase64 = (unsigned char *) unbase64((unsigned char *)wrapped_base64, strlen(wrapped_base64)+1);
+
+					printf("wrapped unbase64 key: ");
+					for(i=0;i<KEY_LEN_BYTE+8;i++)printf("%.02X ",*(wrapped_unbase64+i));
+					printf("\n\n");
+					
+					/* unwrap key using KEK */
+					if(unwrap_aes_key(aes_key, KeyEncryptionKey, (unsigned char *)wrapped_unbase64) == FALSE)
+						error_message("error unwrapping key");
+					else
+					{
+						printf("wrapped key: ");
+						int i=0;
+						for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",aes_key[i]);
+						printf("\n\n");
+					}
+					/* ends of reverse process debugging purpose */
+
 					gtk_main_quit();
 				}
 			}

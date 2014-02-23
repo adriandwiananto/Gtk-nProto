@@ -131,7 +131,8 @@ static gboolean cb_err_watch( GIOChannel *channel, GIOCondition cond)//, Data *d
 void nfc_poll_child_process()
 {
     GPid        pid;
-    gchar      *argv[] = { "../../latihan/popen/./helloworld", NULL };
+    //~ gchar      *argv[] = { "../../latihan/popen/./helloworld", NULL };
+    gchar      *argv[] = { "./nfcreceive", NULL };
     gint        out,
                 err;
     GIOChannel *out_ch,

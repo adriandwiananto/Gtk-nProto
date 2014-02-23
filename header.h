@@ -6,13 +6,22 @@
 #include <stdint.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <openssl/aes.h>
+#include <openssl/rand.h>
 #include <openssl/sha.h>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
+#include <openssl/buffer.h>
 
 #ifndef _NPROTO_
 #define _NPROTO_
 
 /* location of UI XML file relative to path in which program is running */
 #define UI_GLADE_FILE "ui.glade"
+
+/* crypto definition */
+#define AES_MODE (256)
+#define KEY_LEN_BYTE AES_MODE/8 
 
 #define f_password_window		WindowSwitcherFlag.bit0
 #define f_mainmenu_window		WindowSwitcherFlag.bit1
@@ -115,12 +124,18 @@ gboolean init_registration_window();
 
 /*libconfig function*/
 int config_checking();
-int create_new_config_file(uintmax_t ACCN, const char* password);
-int get_ACCN_from_config(uintmax_t *ACCN);
-int get_pwd_from_config(char *pwdstr);
+gboolean create_new_config_file(uintmax_t ACCN, const char *password);
+gboolean get_INT64_from_config(uintmax_t *value, const char *path);
+gboolean get_string_from_config(char *value, const char *path);
+gboolean write_string_to_config(char *value, const char *path);
 
 /*crypto function*/
 void passwordhashing(char *hashed, const gchar *password, const gchar *salt);
+char *unbase64(unsigned char *input, int length);
+char *base64(const unsigned char *input, int length);
+gboolean wrap_aes_key(unsigned char *out, unsigned char *wrapper_key, unsigned char *key_to_wrap);
+gboolean unwrap_aes_key(unsigned char *out, unsigned char *wrapper_key, unsigned char *key_to_unwrap);
+gboolean derive_key(unsigned char *out, const gchar *password, const gchar *salt, unsigned int iteration);
 
 /*spawn function*/
 void nfc_poll_child_process();

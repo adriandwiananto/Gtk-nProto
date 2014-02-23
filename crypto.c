@@ -27,3 +27,74 @@ void passwordhashing(char *hashed, const gchar *password, const gchar *salt)
 	}
 	hashed[SHA256_DIGEST_LENGTH*2]=0;
 }
+
+char *unbase64(unsigned char *input, int length)
+{
+	BIO *b64, *bmem;
+
+	char *buffer = (char *)malloc(length);
+	memset(buffer, 0, length);
+
+	b64 = BIO_new(BIO_f_base64());
+	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+	bmem = BIO_new_mem_buf(input, length);
+	bmem = BIO_push(b64, bmem);
+
+	BIO_read(bmem, buffer, length);
+
+	BIO_free_all(bmem);
+	return buffer;
+}
+
+char *base64(const unsigned char *input, int length)
+{
+	BIO *bmem, *b64;
+	BUF_MEM *bptr;
+
+	b64 = BIO_new(BIO_f_base64());
+	bmem = BIO_new(BIO_s_mem());
+	b64 = BIO_push(b64, bmem);
+	BIO_write(b64, input, length);
+	BIO_flush(b64);
+	BIO_get_mem_ptr(b64, &bptr);
+
+	char *buff = (char *)malloc(bptr->length);
+	memcpy(buff, bptr->data, bptr->length-1);
+	buff[bptr->length-1] = 0;
+
+	BIO_free_all(b64);
+
+	return buff;
+}
+
+gboolean wrap_aes_key(unsigned char *out, unsigned char *wrapper_key, unsigned char *key_to_wrap)
+{
+	char wrp_key_len = 0;
+	//~ unsigned char wrapped_key[(KEY_LEN_BYTE)+8];
+	AES_KEY enc_KEK;
+	AES_set_encrypt_key(wrapper_key,256,&enc_KEK);
+	wrp_key_len = AES_wrap_key(&enc_KEK, 0, out, key_to_wrap, KEY_LEN_BYTE);
+	if(wrp_key_len != ((KEY_LEN_BYTE)+8))return FALSE;	
+	else return TRUE;
+}
+
+gboolean unwrap_aes_key(unsigned char *out, unsigned char *wrapper_key, unsigned char *key_to_unwrap)
+{
+	/* unwrap key */
+	char unwrp_key_len = 0;
+	AES_KEY dec_KEK;
+	AES_set_decrypt_key(wrapper_key,256,&dec_KEK);
+	unwrp_key_len = AES_unwrap_key(&dec_KEK, 0, out, key_to_unwrap, KEY_LEN_BYTE+8);
+	if(unwrp_key_len != KEY_LEN_BYTE)return FALSE;
+	else return TRUE;
+}
+
+gboolean derive_key(unsigned char *out, const gchar *password, const gchar *salt, unsigned int iteration)
+{
+	/*int PKCS5_PBKDF2_HMAC_SHA1(const char *pass, int passlen,
+                           unsigned char *salt, int saltlen, int iter,
+                           int keylen, unsigned char *out);*/
+	
+	if(PKCS5_PBKDF2_HMAC_SHA1(password, strlen(password), (const unsigned char *)salt, strlen(salt), iteration, SHA256_DIGEST_LENGTH, out) == 1)return TRUE;
+	else return FALSE;
+}

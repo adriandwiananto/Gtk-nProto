@@ -70,7 +70,7 @@ void read_pwd_entry()
 	else //password entry not empty
 	{
 		/*get ACCN from config*/
-		if(get_ACCN_from_config(&ACCN))
+		if(get_INT64_from_config(&ACCN, "application.ACCN") == TRUE)
 		{
 			/*convert ACCN from INT64 to string*/
 			sprintf(ACCNstr, "%ju", ACCN);
@@ -79,7 +79,7 @@ void read_pwd_entry()
 			passwordhashing(hashedpassword, pwd_entry_text, ACCNstr);
 			
 			/*compare with password in config*/
-			if(get_pwd_from_config(pwd_in_setting))
+			if(get_string_from_config(pwd_in_setting, "application.Pwd") == TRUE)
 			{
 				/*debugging purpose*/
 				/*printf("pwd entered: %s \n", hashedpassword);
@@ -124,13 +124,13 @@ void read_pwd_entry()
 			}
 			else
 			{
-				error_message("invalid config file!!");
+				error_message("invalid config files!!");
 				gtk_main_quit();
 			}
 		}
 		else
 		{
-			error_message("invalid config file!!");
+			error_message("invalid config filez!!");
 			gtk_main_quit();
 		}
 	}
