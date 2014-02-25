@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <glib.h>
 #include <openssl/aes.h>
 #include <openssl/rand.h>
 #include <openssl/sha.h>

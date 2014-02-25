@@ -68,50 +68,96 @@ void on_new_trans_cancel_button_clicked ()
 }
 
 /* parse nfc data from child process */
-static void parse_nfc_data(gchar *nfcdata)
+static void parse_nfc_data(GString *nfcdata)
 {
-	gchar dataonly[128];
-	memset(dataonly, 0, 128);
-	memcpy(dataonly, nfcdata+5, strlen(nfcdata)-5);
-	printf("data only: %s\n",dataonly);
+	int i=0;
+	gsize data_len;
+	/* subtract 5 from prefix "DATA:"
+	 * subtract 1 from postix newline
+	 */
+	data_len = (nfcdata->len)-6;
+
+	gchar data_only[262];
+	memset(data_only,0,262);
+	
+	memcpy(data_only,(nfcdata->str)+5,data_len);
+	
+	unsigned char ReceivedData[data_len/2];
+	printf("Data in Array:\n");
+	for (i=0;i<data_len/2;i++) 
+	{
+		int value;
+		sscanf(data_only+2*i,"%02x",&value);
+		ReceivedData[i] = (unsigned char)value;
+		printf("%02X ", ReceivedData[i]);
+		if(!((i+1)%8))printf("\n");
+	}
+	printf("\n");
 }
 
 /* child process watch callback */
-static void cb_child_watch( GPid pid, gint status)//, Data *data );
+static void cb_child_watch( GPid pid, gint status, GString *data )
 {
+	data = g_string_new(NULL);
+
     /* Close pid */
     g_spawn_close_pid( pid );
+	
+    g_string_free(data,TRUE);
 }
 
 /* io out watch callback */
-static gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond)//, Data *data );
+static gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond, GString *data )
 {
-    gchar *string;
-    gsize  size;
 	GIOStatus status;
 	
+	gchar detect_str[5];
+	memset(detect_str,0,5);
+	
+	data = g_string_new(NULL);
+
     if( cond == G_IO_HUP )
     {
         g_io_channel_unref( channel );
         return( FALSE );
     }
 
-    status = g_io_channel_read_line( channel, &string, &size, NULL, NULL );
+    status = g_io_channel_read_line_string( channel, data, NULL, NULL );
     
-    if(status == G_IO_STATUS_EOF)parse_nfc_data(string);
-    //~ gtk_text_buffer_insert_at_cursor( data->out, string, -1 );
-	else fprintf(stdout,"%s",string);
-	//~ parse_nfc_data(string);
-	g_free( string );
+    switch(status)
+    {
+		case G_IO_STATUS_EOF:
+			printf("EOF\n");
+			break;
+			
+		case G_IO_STATUS_NORMAL:
+			//~ fprintf(stdout,"%s",data->str);
+			
+			memcpy(detect_str,data->str,5);
+			if(!strcmp(detect_str,"DATA:"))parse_nfc_data(data);
+			
+			break;
+	
+		case G_IO_STATUS_AGAIN: break;
+		case G_IO_STATUS_ERROR:
+		default:
+			printf("Error stdout from child process\n");
+			error_message("Error reading from child process");
+			break;
+	}
+		
+    g_string_free(data,TRUE);
 
     return( TRUE );
 }
 
 /* io err watch callback */
-static gboolean cb_err_watch( GIOChannel *channel, GIOCondition cond)//, Data *data );
+static gboolean cb_err_watch( GIOChannel *channel, GIOCondition cond, GString *data )
 {
     gchar *string;
     gsize  size;
+    
+	data = g_string_new(NULL);
 
     if( cond == G_IO_HUP )
     {
@@ -120,9 +166,9 @@ static gboolean cb_err_watch( GIOChannel *channel, GIOCondition cond)//, Data *d
     }
 
     g_io_channel_read_line( channel, &string, &size, NULL, NULL );
-    //gtk_text_buffer_insert_at_cursor( data->err, string, -1 );
     fprintf(stderr,"%s",string);    
     g_free( string );
+    g_string_free(data,TRUE);
 
     return( TRUE );
 }
@@ -131,18 +177,21 @@ static gboolean cb_err_watch( GIOChannel *channel, GIOCondition cond)//, Data *d
 void nfc_poll_child_process()
 {
     GPid        pid;
-    //~ gchar      *argv[] = { "../../latihan/popen/./helloworld", NULL };
-    gchar      *argv[] = { "./nfcreceive", NULL };
+    gchar      *argv[] = { "../../latihan/popen/./helloworld", NULL };
+    //~ gchar      *argv[] = { "./nfcreceive", NULL };
     gint        out,
                 err;
     GIOChannel *out_ch,
                *err_ch;
     gboolean    ret;
 
+	GString *data;
+	data = g_string_new(NULL);
+	
     /* Spawn child process */
     ret = g_spawn_async_with_pipes( NULL, argv, NULL,
                                     G_SPAWN_DO_NOT_REAP_CHILD, NULL,
-                                    NULL, &pid, NULL, &out, &err, NULL );
+                                    data, &pid, NULL, &out, &err, NULL );
     if( ! ret )
     {
         g_error( "SPAWN FAILED" );
@@ -152,13 +201,15 @@ void nfc_poll_child_process()
 	nfc_poll_pid = pid;
     /* Add watch function to catch termination of the process. This function
      * will clean any remnants of process. */
-    g_child_watch_add( pid, (GChildWatchFunc)cb_child_watch, NULL );
+    g_child_watch_add( pid, (GChildWatchFunc)cb_child_watch, data );
 
     /* Create channels that will be used to read data from pipes. */
     out_ch = g_io_channel_unix_new( out );
     err_ch = g_io_channel_unix_new( err );
 
     /* Add watches to channels */
-    g_io_add_watch( out_ch, G_IO_IN | G_IO_HUP, (GIOFunc)cb_out_watch, NULL );
-    g_io_add_watch( err_ch, G_IO_IN | G_IO_HUP, (GIOFunc)cb_err_watch, NULL );
+    g_io_add_watch( out_ch, G_IO_IN | G_IO_HUP, (GIOFunc)cb_out_watch, data );
+    g_io_add_watch( err_ch, G_IO_IN | G_IO_HUP, (GIOFunc)cb_err_watch, data );
+    
+    g_string_free(data,TRUE);
 }
