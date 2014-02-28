@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <glib.h>
+#include <sys/wait.h>
 #include <openssl/aes.h>
 #include <openssl/rand.h>
 #include <openssl/sha.h>
