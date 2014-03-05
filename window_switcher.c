@@ -32,7 +32,7 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 		gtk_widget_show(newtranswindow->window);
 		
 		//NFC polling goes in here
-		nfc_poll_child_process();
+		nfc_poll_child_process(SESN_text);
 	}
 	else
 	{

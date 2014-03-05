@@ -31,26 +31,26 @@ void print_data(unsigned char *Data, unsigned char Len, const char *Type)
 	if (!strcmp(Type,"RetData"))
 	{
 		Len+=1;
-		printf("Ret Data:\n");
+		fprintf(stdout,"Ret Data:\n");
 		success = true;
 	}
 	else if (!strcmp(Type,"Response"))
 	{
-		printf("Response Data:\n");
+		fprintf(stdout,"Response Data:\n");
 		success = true;
 	}
 	else if (!strcmp(Type,"NDEF"))
 	{
-		printf("NDEF Data:\n");
+		fprintf(stdout,"NDEF Data:\n");
 		success = true;
 	}
 	else if (!strcmp(Type,"Result"))
 	{
 		for(i=0;i<Len;i++)
 		{
-			printf("%02X", Data[i]);
+			fprintf(stdout,"%02X", Data[i]);
 		}
-		printf("\n");
+		fprintf(stdout,"\n");
 		success = false;
 	}
 	
@@ -59,10 +59,10 @@ void print_data(unsigned char *Data, unsigned char Len, const char *Type)
 	{
 		for(i=0;i<Len;i++)
 		{
-			printf("%02X ", Data[i]);
-			if(!((i+1)%8))printf("\n");
+			fprintf(stdout,"%02X ", Data[i]);
+			if(!((i+1)%8))fprintf(stdout,"\n");
 		}
-		printf("\n");
+		fprintf(stdout,"\n");
 	}
 }
 
@@ -88,16 +88,16 @@ int main(int argc, char *argv[])
 	//~ 
 	//~ if (valid_arg == false)
 	//~ {
-		//~ printf("\n");
-		//~ printf("usage:\n");
-		//~ printf("\t");
-		//~ printf("./picc_emulation [PARAMETER]\n\n");
-		//~ printf("PARAMETER:\n");
-		//~ printf("\t");
-		//~ printf("read \t: Read NDEF message from NFC Forum Type 4 Tag emulated by the reader to NFC-compliant Smartphone\n");
-		//~ printf("\t");
-		//~ printf("write \t: Write NDEF message from NFC-compliant Smartphone to NFC Forum Type 4 Tag emulated by the reader\n");
-		//~ printf("\n");
+		//~ fprintf(stdout,"\n");
+		//~ fprintf(stdout,"usage:\n");
+		//~ fprintf(stdout,"\t");
+		//~ fprintf(stdout,"./picc_emulation [PARAMETER]\n\n");
+		//~ fprintf(stdout,"PARAMETER:\n");
+		//~ fprintf(stdout,"\t");
+		//~ fprintf(stdout,"read \t: Read NDEF message from NFC Forum Type 4 Tag emulated by the reader to NFC-compliant Smartphone\n");
+		//~ fprintf(stdout,"\t");
+		//~ fprintf(stdout,"write \t: Write NDEF message from NFC-compliant Smartphone to NFC Forum Type 4 Tag emulated by the reader\n");
+		//~ fprintf(stdout,"\n");
 		//~ return 0;
 	//~ }
 	
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 	{
 		if(!GetSerialNum(DEVICE_ADDRESS, CurAddr, SerialNum))
 		{
-			printf("Address: %d, SN: %s\n", Addr, SerialNum);
+			fprintf(stdout,"Address: %d, SN: %s\n", Addr, SerialNum);
 			open_reader = true;
 		}
 		else
@@ -130,10 +130,10 @@ int main(int argc, char *argv[])
 			if(open_count >= 5)
 			{
 				fprintf(stderr, "fail to initialize reader. please reconnect\n");
-				_exit(1);
+				return 1;
 			}
 		}
-		printf("opencount:%d\n",open_count);
+		fprintf(stdout,"opencount:%d\n",open_count);
 		open_count++;
 		usleep(10*1000);
 	}
@@ -163,8 +163,8 @@ int main(int argc, char *argv[])
 		0xD0,0x00,0x00 //empty NDEF message
 	};
 
-	unsigned char RcvdNDEF[262];
-	memset(RcvdNDEF, 0, 262);
+	unsigned char RcvdNDEF[270];
+	memset(RcvdNDEF, 0, 270);
 	
 	unsigned char RcvdNDEFLen = 0;
 
@@ -207,13 +207,13 @@ int main(int argc, char *argv[])
 		{
 			if(RetData[0] != 0)
 			{
-				printf("Init OK!\n");
+				fprintf(stdout,"Init OK!\n");
 				print_data(RetData,RetData[0],"RetData");
 				PICC_init = true;
 			}
-			else printf("Init fail!\n");
+			else fprintf(stderr,"Init fail!\n");
 		}
-		else printf("Init func call fail!\n");
+		else fprintf(stderr,"Init func call fail!\n");
 		
 	}
 	
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 		memset(TgResponse, 0, 262);
 		if(!NFC_Picc_Command(DEVICE_ADDRESS, RetData))
 		{
-			printf("NFC Picc Command OK!\n");
+			fprintf(stdout,"NFC Picc Command OK!\n");
 			print_data(RetData,RetData[0],"RetData");
 			
 			INS = RetData[3];
@@ -371,11 +371,15 @@ int main(int argc, char *argv[])
 				case UPDATE_BINARY:
 				{
 					unsigned char Lc = RetData[6];
+					
+					unsigned char P2 = RetData[5];
+					//~ if(P2>0)P2-=2;
+					
 					if(Lc > 2)
 					{
-						RcvdNDEFLen = Lc-2;
-						for(i=0;i<(Lc-2);i++)RcvdNDEF[i] = RetData[9+i];
-						print_data(RcvdNDEF, Lc-2, "NDEF");
+						RcvdNDEFLen = P2+Lc;
+						for(i=0;i<Lc;i++)RcvdNDEF[i+P2] = RetData[7+i];
+						//~ print_data(RcvdNDEF, Lc-2, "NDEF");
 					}
 					
 					TgResponse[0] = 0x90;
@@ -396,29 +400,29 @@ int main(int argc, char *argv[])
 			
 			if(!NFC_Picc_Response(DEVICE_ADDRESS, TgResLen, TgResponse, RetData))
 			{
-				printf("NFC Picc Response OK!\n");
+				fprintf(stdout,"NFC Picc Response OK!\n");
 				print_data(TgResponse,TgResLen,"Response");
-				printf("\n");
+				fprintf(stdout,"\n");
 			}
 			else
 			{
-				printf("NFC Picc Response Fail!\n");
-				_exit(3);
+				fprintf(stderr,"NFC Picc Response Fail!\n");
+				return 3;
 			}
 		}
 		else
 		{
-			printf("NFC Picc Command Fail!\n");
+			fprintf(stderr,"NFC Picc Command Fail!\n");
 			PICC_NDEF_detection = true;
 		}
 	}
 	
 	if (write_complete)
 	{
-		printf("DATA:");
-		print_data(RcvdNDEF, RcvdNDEFLen, "Result");
-		_exit(0);
+		fprintf(stdout,"DATA:");
+		print_data(RcvdNDEF+2, RcvdNDEFLen-2, "Result");
+		return 0;
 	}
 	
-	_exit(4);
+	return 4;
 }

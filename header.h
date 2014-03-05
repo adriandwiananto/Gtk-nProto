@@ -140,7 +140,7 @@ gboolean unwrap_aes_key(unsigned char *out, unsigned char *wrapper_key, unsigned
 gboolean derive_key(unsigned char *out, const gchar *password, const gchar *salt, unsigned int iteration);
 
 /*spawn function*/
-void nfc_poll_child_process();
+void nfc_poll_child_process(gchar *SESN);
 
 /*other function*/
 void read_pwd_entry();

@@ -28,18 +28,6 @@ gboolean init_newtrans_window()
 	return TRUE;
 }
 
-//~ static void sigchld_handler(int sig)
-//~ {
-	//~ int *child_status = NULL;
-	//~ waitpid(nfc_poll_pid, child_status, WNOHANG);
-	//~ if (WIFEXITED(child_status))
-	//~ {
-		//~ if(!WEXITSTATUS(child_status))notification_message("Transaction success!");
-		//~ else error_message("Transaction failed!");
-		//~ printf("exit status: %d\n",WEXITSTATUS(child_status));
-	//~ }
-//~ }
-
 static void kill_nfc_poll_process()
 {
 	/*check child process availability, if exists kill it*/
@@ -79,6 +67,19 @@ void on_new_trans_cancel_button_clicked ()
 	WindowSwitcher(WindowSwitcherFlag);
 }
 
+/* hex written as string to binary Array */
+static void hexstrToBinArr(unsigned char* dest, gchar* source, gsize destlength)
+{
+	int i;
+	
+	for (i=0;i<destlength;i++) 
+	{
+		int value;
+		sscanf(source+2*i,"%02x",&value);
+		dest[i] = (unsigned char)value;
+	}
+}
+
 /* parse nfc data from child process */
 static void parse_nfc_data(GString *nfcdata)
 {
@@ -95,13 +96,11 @@ static void parse_nfc_data(GString *nfcdata)
 	memcpy(data_only,(nfcdata->str)+5,data_len);
 	
 	unsigned char ReceivedData[data_len/2];
-	printf("str len:%d, data_len:%d\n",nfcdata->len,data_len);
+	hexstrToBinArr(ReceivedData, data_only, data_len/2);
+
 	printf("Data in Array:\n");
 	for (i=0;i<data_len/2;i++) 
 	{
-		int value;
-		sscanf(data_only+2*i,"%02x",&value);
-		ReceivedData[i] = (unsigned char)value;
 		printf("%02X ", ReceivedData[i]);
 		if(!((i+1)%8))printf("\n");
 	}
@@ -126,9 +125,13 @@ static void cb_child_watch( GPid pid, gint status, GString *data )
 				case 2:
 					break;
 				case 3:
+					error_message("Transaction failed! error:3");
+					break;
 				case 4:
+					error_message("Transaction failed! error:4");
+					break;
 				default:
-					error_message("Transaction failed!");
+					error_message("Transaction failed! error:99");
 					break;
 			}
 		}
@@ -159,7 +162,7 @@ static gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond, GString *d
     }
 
     status = g_io_channel_read_line_string( channel, data, NULL, NULL );
-    
+ 
     switch(status)
     {
 		case G_IO_STATUS_EOF:
@@ -167,10 +170,10 @@ static gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond, GString *d
 			break;
 			
 		case G_IO_STATUS_NORMAL:
-			//~ fprintf(stdout,"%s",data->str);
+			fprintf(stdout,"%s",data->str);
 			
 			memcpy(detect_str,data->str,5);
-			if(!strcmp(detect_str,"DATA:"))parse_nfc_data(data);;
+			if(!strcmp(detect_str,"DATA:"))parse_nfc_data(data);
 			
 			break;
 	
@@ -210,11 +213,11 @@ static gboolean cb_err_watch( GIOChannel *channel, GIOCondition cond, GString *d
 }
 
 /* create child process for nfc poll (call other program) */
-void nfc_poll_child_process()
+void nfc_poll_child_process(gchar *SESN)
 {
     GPid        pid;
     //~ gchar      *argv[] = { "../../latihan/popen/./helloworld", NULL };
-    gchar      *argv[] = { "./picc_emulation_write", NULL };
+    gchar      *argv[] = { "./picc_emulation_write", SESN, NULL };
     gint        out,
                 err;
     GIOChannel *out_ch,
@@ -223,7 +226,7 @@ void nfc_poll_child_process()
 
 	GString *data;
 	data = g_string_new(NULL);
-	
+	printf("SESN: %s\n",SESN);
     /* Spawn child process */
     ret = g_spawn_async_with_pipes( NULL, argv, NULL,
                                     G_SPAWN_DO_NOT_REAP_CHILD, NULL,
