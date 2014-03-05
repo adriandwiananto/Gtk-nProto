@@ -13,7 +13,7 @@ void passwordhashing(char *hashed, const gchar *password, const gchar *salt)
 	memset(pass_salt_combined, 0, 256);
 	memcpy(pass_salt_combined, password, strlen(password));
 	strcat(pass_salt_combined, salt);
-	printf("pass salt combined: %s \n", pass_salt_combined);
+	//~ printf("pass salt combined: %s \n", pass_salt_combined);
 	
 	/*hash pass+salt and write the binary result to hashbin*/
 	SHA256_Init(&context);
@@ -97,4 +97,59 @@ gboolean derive_key(unsigned char *out, const gchar *password, const gchar *salt
 	
 	if(PKCS5_PBKDF2_HMAC_SHA1(password, strlen(password), (const unsigned char *)salt, strlen(salt), iteration, SHA256_DIGEST_LENGTH, out) == 1)return TRUE;
 	else return FALSE;
+}
+
+void getTransKey(unsigned char* aes_key, const gchar* password, const gchar* ACCN, gboolean printResult)
+{
+	char wrapped_base64[80];
+	memset(wrapped_base64,0,80);
+	
+	//~ unsigned char aes_key[KEY_LEN_BYTE];
+	unsigned char KeyEncryptionKey[KEY_LEN_BYTE];
+	int i=0;
+	
+	/* derive key from password + ACCN */
+	if(derive_key(KeyEncryptionKey, password, ACCN, 10000) == FALSE)
+	{
+		error_message("KEK derivation error");
+	}
+	else
+	{
+		if (printResult)
+		{
+			printf("derived key: ");
+			for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",KeyEncryptionKey[i]);
+			printf("\n\n");
+		}
+	}
+	
+	if(get_string_from_config(wrapped_base64,"security.transaction")==FALSE)
+	{
+		error_message("failed to get transaction key from config");
+	}
+	if(printResult)printf("b64 key from config : %s\n\n",wrapped_base64);
+	unsigned char *wrapped_unbase64 = (unsigned char *) unbase64((unsigned char *)wrapped_base64, strlen(wrapped_base64)+1);
+
+	if (printResult)
+	{
+		printf("wrapped unbase64 key: ");
+		for(i=0;i<KEY_LEN_BYTE+8;i++)printf("%.02X ",*(wrapped_unbase64+i));
+		printf("\n\n");
+	}
+	
+		/* unwrap key using KEK */
+	if(unwrap_aes_key(aes_key, KeyEncryptionKey, (unsigned char *)wrapped_unbase64) == FALSE)
+	{
+		error_message("error unwrapping key");
+	}
+	else
+	{
+		if (printResult)
+		{
+			printf("wrapped key: ");
+			int i=0;
+			for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",aes_key[i]);
+			printf("\n\n");
+		}
+	}
 }

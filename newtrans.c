@@ -105,6 +105,12 @@ static void parse_nfc_data(GString *nfcdata)
 		if(!((i+1)%8))printf("\n");
 	}
 	printf("\n");
+	
+	//TODO:
+	//remove ndef header, take only emoney frame
+	//read emoney frame header
+	//if header valid, decrypt payload using IV sent
+	//write to log
 }
 
 /* child process watch callback */

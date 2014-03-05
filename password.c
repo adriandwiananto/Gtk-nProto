@@ -81,23 +81,22 @@ void read_pwd_entry()
 			/*compare with password in config*/
 			if(get_string_from_config(pwd_in_setting, "application.Pwd") == TRUE)
 			{
-				/*debugging purpose*/
-				/*printf("pwd entered: %s \n", hashedpassword);
-				printf("pwd to compare: %s \n", pwd_in_setting);
-
-				int i=0;
-				int j=0;
-				
-				while(pwd_in_setting[j]!=0 || hashedpassword[i]!=0)
-				{
-					printf("hashedpassword[%d]:%.02X\t\tpwd_in_setting[%d]:%.02X\n",i,hashedpassword[i],j,pwd_in_setting[j]);
-					if(hashedpassword[i]!=0)i++;
-					if(pwd_in_setting[j]!=0)j++;
-				}*/
-				
 				/*entered password = stored password in config*/
 				if(!strcmp(hashedpassword, pwd_in_setting))
 				{
+					/* get key, debugging purpose only!! */
+					unsigned char aes_key[KEY_LEN_BYTE];
+					memset(aes_key,0,KEY_LEN_BYTE);
+					getTransKey(aes_key, pwd_entry_text, ACCNstr, FALSE);
+					int i = 0;
+					printf("AESKEY!: ");
+					for(i = 0; i<KEY_LEN_BYTE;i++)
+					{
+						printf("%02X ",aes_key[i]);
+					}
+					printf("\n");
+					/* end of get key */
+					
 					/*switch window to main menu*/
 					Bitwise WindowSwitcherFlag;
 					f_status_window = FALSE;
@@ -119,7 +118,6 @@ void read_pwd_entry()
 						gtk_main_quit();
 					}
 				}
-					
 				
 			}
 			else

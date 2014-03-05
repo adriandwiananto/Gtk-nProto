@@ -138,6 +138,7 @@ char *base64(const unsigned char *input, int length);
 gboolean wrap_aes_key(unsigned char *out, unsigned char *wrapper_key, unsigned char *key_to_wrap);
 gboolean unwrap_aes_key(unsigned char *out, unsigned char *wrapper_key, unsigned char *key_to_unwrap);
 gboolean derive_key(unsigned char *out, const gchar *password, const gchar *salt, unsigned int iteration);
+void getTransKey(unsigned char* aes_key, const gchar* password, const gchar* ACCN, gboolean printResult);
 
 /*spawn function*/
 void nfc_poll_child_process(gchar *SESN);
