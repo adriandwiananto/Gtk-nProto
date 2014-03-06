@@ -34,6 +34,18 @@
 #define f_registration_window	WindowSwitcherFlag.bit6
 #define f_status_window 		WindowSwitcherFlag.status
 
+typedef struct
+{
+	gboolean msgBegin;
+	gboolean msgEnd;
+	gboolean chunkFlag;
+	gboolean shortRec;
+	gboolean IDLen;
+	char TNF;
+	unsigned char typeLen;
+	unsigned char payloadLen;
+}NdefHeader;
+
 typedef union
 {
 	struct 
@@ -139,6 +151,7 @@ gboolean wrap_aes_key(unsigned char *out, unsigned char *wrapper_key, unsigned c
 gboolean unwrap_aes_key(unsigned char *out, unsigned char *wrapper_key, unsigned char *key_to_unwrap);
 gboolean derive_key(unsigned char *out, const gchar *password, const gchar *salt, unsigned int iteration);
 void getTransKey(unsigned char* aes_key, const gchar* password, const gchar* ACCN, gboolean printResult);
+gboolean decrypt_transaction_frame(unsigned char* output, unsigned char* input, unsigned char* IV);
 
 /*spawn function*/
 void nfc_poll_child_process(gchar *SESN);

@@ -1,5 +1,7 @@
 #include "header.h"
 
+static gboolean parse_transaction_frame(unsigned char *payload);
+
 /*
 We call init_newtrans_window() when our program is starting to load 
 new trans window with references to Glade file. 
@@ -111,6 +113,115 @@ static void parse_nfc_data(GString *nfcdata)
 	//read emoney frame header
 	//if header valid, decrypt payload using IV sent
 	//write to log
+	
+	/* Parse NDEF data */
+	NdefHeader ReceivedNDEF;
+	
+	if(ReceivedData[0] & 0x80) ReceivedNDEF.msgBegin = TRUE;
+	else ReceivedNDEF.msgBegin = FALSE;
+	
+	if(ReceivedData[0] & 0x40) ReceivedNDEF.msgEnd = TRUE;
+	else ReceivedNDEF.msgEnd = FALSE;
+	
+	if(ReceivedData[0] & 0x20) ReceivedNDEF.chunkFlag = TRUE;
+	else ReceivedNDEF.chunkFlag = FALSE;
+	
+	if(ReceivedData[0] & 0x10) ReceivedNDEF.shortRec = TRUE;
+	else ReceivedNDEF.shortRec = FALSE;
+	
+	if(ReceivedData[0] & 0x08) ReceivedNDEF.IDLen = TRUE;
+	else ReceivedNDEF.IDLen = FALSE;
+	
+	//RFC2046 Media-type
+	if(ReceivedData[0] & 0x02) ReceivedNDEF.TNF = 0x02;
+	
+	if((ReceivedNDEF.TNF == 0x02) && ReceivedNDEF.shortRec && !ReceivedNDEF.chunkFlag)
+	{
+		int index = 1;
+		ReceivedNDEF.typeLen = ReceivedData[index];
+		index++;
+		
+		ReceivedNDEF.payloadLen = ReceivedData[index];
+		index++;
+		
+		if(ReceivedNDEF.typeLen > 0)
+		{
+			unsigned char type[ReceivedNDEF.typeLen];
+			memcpy(type,ReceivedData+index,ReceivedNDEF.typeLen);
+			index += ReceivedNDEF.typeLen;
+			
+			unsigned char payload[ReceivedNDEF.payloadLen];
+			memcpy(payload,ReceivedData+index, ReceivedNDEF.payloadLen);
+			index += ReceivedNDEF.payloadLen;
+			
+			if(!parse_transaction_frame(payload))error_message("invalid data");
+		}
+		else fprintf(stderr, "unknown NDEF type");
+	}
+	else fprintf(stderr, "unsupported NDEF TNF");
+}
+
+static gboolean parse_transaction_frame(unsigned char *payload)
+{
+	int index = 0;
+	
+	unsigned char FL = *(payload+index);
+	index++;
+	unsigned char PT = *(payload+index);
+	index++;
+	unsigned char FF = *(payload+index);
+	index++;
+	
+	unsigned int SESNheader = (payload[index]<<8) | payload[index+1];
+	index += 4;
+	// skip 2 byte EH
+	
+	unsigned char encryptedPayload[32];
+	memset(encryptedPayload,0,32);
+	memcpy(encryptedPayload,payload+index,32);
+	index+=32;
+	
+	unsigned char transIV[16];
+	memset(transIV,0,16);
+	memcpy(transIV,payload+index,16);
+	index+=16;
+	
+	unsigned char decryptedPayload[32];
+	memset(decryptedPayload,0,32);
+	
+	if(decrypt_transaction_frame(decryptedPayload, encryptedPayload, transIV))
+	{
+		/* DO NOT USE IV VALUE AGAIN! 
+		 * AFTER DECRYPT USING OpenSSL, IV VALUE CHANGED!! 
+		 */
+		 
+		//write_transaction_log();
+		int z=0;
+		printf("\nFL: %02X\n",FL);
+		printf("PT: %02X\n",PT);
+		printf("FF: %02X\n",FF);
+		printf("SESN in header: %02X\n",SESNheader);
+
+		printf("decrypted payload: \n");
+		for(z=0;z<32;z++)
+		{
+			printf("%02X ", decryptedPayload[z]);
+		}
+		printf("\n");
+
+		printf("IV: \n");
+		for(z=0;z<16;z++)
+		{
+			printf("%02X ", *(payload+(39+z)));
+		}
+		printf("\n");
+		return TRUE;
+	}
+	else
+	{
+		printf("error decryption!\n");
+		return FALSE;
+	}
 }
 
 /* child process watch callback */
@@ -176,7 +287,7 @@ static gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond, GString *d
 			break;
 			
 		case G_IO_STATUS_NORMAL:
-			fprintf(stdout,"%s",data->str);
+			//~ fprintf(stdout,"%s",data->str);
 			
 			memcpy(detect_str,data->str,5);
 			if(!strcmp(detect_str,"DATA:"))parse_nfc_data(data);

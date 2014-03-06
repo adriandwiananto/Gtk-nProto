@@ -153,3 +153,31 @@ void getTransKey(unsigned char* aes_key, const gchar* password, const gchar* ACC
 		}
 	}
 }
+
+gboolean decrypt_transaction_frame(unsigned char* output, unsigned char* input, unsigned char* IV)
+{
+	/* DO NOT USE IV VALUE AGAIN! 
+	 * AFTER DECRYPT USING OpenSSL, IV VALUE CHANGED!! 
+	 */
+
+	const gchar *passwordStr;
+	uintmax_t ACCN;
+	gchar ACCNstr[32];
+	memset(ACCNstr, 0, 32);
+
+	passwordStr = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
+
+	if(get_INT64_from_config(&ACCN, "application.ACCN") == TRUE)sprintf(ACCNstr, "%ju", ACCN);
+	else return FALSE;
+	
+	unsigned char aes_key[32];
+	memset(aes_key,0,32);
+	
+	getTransKey(aes_key, passwordStr, ACCNstr, FALSE);
+	
+	AES_KEY dec_key;
+	AES_set_decrypt_key(aes_key, 256, &dec_key);
+	AES_cbc_encrypt(input, output, 32, &dec_key, IV, AES_DECRYPT);
+	
+	return TRUE;
+}
