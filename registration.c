@@ -100,7 +100,9 @@ void on_registration_request_button_clicked()
 					 * get key from server
 					 */
 					 
-					/* create rand dummy key */
+					/* starts of create rand dummy key */
+					/* THIS IS NOT PERMANENT */
+					/* FINAL CODE WILL GET KEY FROM SERVER */
 					unsigned char aes_key[KEY_LEN_BYTE];
 					RAND_bytes(aes_key, KEY_LEN_BYTE); 
 					
@@ -108,6 +110,7 @@ void on_registration_request_button_clicked()
 					int i=0;
 					for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",aes_key[i]);
 					printf("\n\n");
+					/* ends of create rand dummy key */
 					
 					unsigned char KeyEncryptionKey[KEY_LEN_BYTE];
 					unsigned char wrapped_key[KEY_LEN_BYTE+8];
@@ -115,6 +118,7 @@ void on_registration_request_button_clicked()
 					/* derive key from password + ACCN */
 					if(derive_key(KeyEncryptionKey, new_pwd_entry, new_ACCN_entry, 10000) == FALSE)
 						error_message("KEK derivation error");
+#ifdef DEBUG_MODE
 					else
 					{
 						printf("derived key: ");
@@ -122,10 +126,12 @@ void on_registration_request_button_clicked()
 						for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",KeyEncryptionKey[i]);
 						printf("\n\n");
 					}
-					
+#endif
+
 					/* wrap key using KEK */
 					if(wrap_aes_key(wrapped_key, KeyEncryptionKey, aes_key) == FALSE)
 						error_message("error wrapping key");
+#ifdef DEBUG_MODE
 					else
 					{
 						printf("wrapped key: ");
@@ -133,16 +139,14 @@ void on_registration_request_button_clicked()
 						for(i=0;i<KEY_LEN_BYTE+8;i++)printf("%.02X ",wrapped_key[i]);
 						printf("\n\n");
 					}
-					
+#endif
+
 					/* convert wrapped key to base 64 and write to config */
 					char *wrapped_base64 = base64(wrapped_key, KEY_LEN_BYTE+8);
 					printf("wrapped key to write: %s\n\n",wrapped_base64);
 					write_string_to_config(wrapped_base64,"security.transaction");
 					
-					
-					
-					
-					/* starts of reverse process debugging purpose */
+#ifdef DEBUG_MODE					
 					get_string_from_config(wrapped_base64,"security.transaction");
 					unsigned char *wrapped_unbase64 = (unsigned char *) unbase64((unsigned char *)wrapped_base64, strlen(wrapped_base64)+1);
 
@@ -160,7 +164,7 @@ void on_registration_request_button_clicked()
 						for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",aes_key[i]);
 						printf("\n\n");
 					}
-					/* ends of reverse process debugging purpose */
+#endif
 
 					gtk_main_quit();
 				}

@@ -1,7 +1,28 @@
+/* return list
+ * 0 : normal
+ * 1 : USB reader initialization error
+ * 2 : killed by SIGTERM
+ * 3 : NFC PICC Response fail (APDU Transaction Error)
+ * 4 : NFC PICC Command fail (APDU Transaction Error)
+ * 5 : program initialization error
+ * 6 : SESN did not match
+ * 7 : Invalid payload data (encrypt / decrypt error)
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
 #include <signal.h>
+#include <inttypes.h>
+#include <libconfig.h>
+#include <openssl/sha.h>
+#include <sys/wait.h>
+#include <openssl/aes.h>
+#include <openssl/rand.h>
+#include <openssl/sha.h>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
+#include <openssl/buffer.h>
 #include "CVAPIV01_DESFire.h"
 
 #define DEVICE_ADDRESS	(0)
@@ -15,10 +36,15 @@
 #define READ_MODE		(true)
 #define WRITE_MODE 		(false)
 
+//crypto
+#define AES_MODE (256)
+#define KEY_LEN_BYTE AES_MODE/8 
+
 static void
 intr_hdlr(int sig)
 {
   (void) sig;
+  fprintf(stderr,"killed!\n");
   CloseComm();
   _exit(2);
 }
@@ -54,7 +80,6 @@ void print_data(unsigned char *Data, unsigned char Len, const char *Type)
 		success = false;
 	}
 	
-
 	if (success == true)
 	{
 		for(i=0;i<Len;i++)
@@ -66,40 +91,262 @@ void print_data(unsigned char *Data, unsigned char Len, const char *Type)
 	}
 }
 
+bool derive_key(unsigned char *out, const char *pwd, const char *salt, unsigned int iteration)
+{
+	/*int PKCS5_PBKDF2_HMAC_SHA1(const char *pass, int passlen,
+                           unsigned char *salt, int saltlen, int iter,
+                           int keylen, unsigned char *out);*/
+	
+	if(PKCS5_PBKDF2_HMAC_SHA1(pwd, strlen(pwd), (const unsigned char *)salt, strlen(salt), iteration, SHA256_DIGEST_LENGTH, out) == 1)return true;
+	else return false;
+}
+
+bool get_string_from_config(char *value, const char *path)
+{
+	const char *str_in_config;
+	config_t cfg;
+
+	config_init(&cfg);
+
+	/* Read the file. If there is an error, report it and exit. */
+	if(! config_read_file(&cfg, "config.cfg"))
+	{
+		config_destroy(&cfg);
+		return false;	//return error
+	}
+
+	/* Get pwd. */
+	if(config_lookup_string(&cfg, path, &str_in_config))
+	{
+		memcpy(value, str_in_config, strlen(str_in_config));
+		config_destroy(&cfg);
+		return true;
+	}
+	else
+	{
+		fprintf(stderr, "No mentioned setting in configuration file.\n");
+		config_destroy(&cfg);
+		return false;
+	}
+}
+
+char *unbase64(unsigned char *input, int length)
+{
+	BIO *b64, *bmem;
+
+	char *buffer = (char *)malloc(length);
+	memset(buffer, 0, length);
+
+	b64 = BIO_new(BIO_f_base64());
+	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+	bmem = BIO_new_mem_buf(input, length);
+	bmem = BIO_push(b64, bmem);
+
+	BIO_read(bmem, buffer, length);
+
+	BIO_free_all(bmem);
+	return buffer;
+}
+
+bool unwrap_aes_key(unsigned char *out, unsigned char *wrapper_key, unsigned char *key_to_unwrap)
+{
+	/* unwrap key */
+	char unwrp_key_len = 0;
+	AES_KEY dec_KEK;
+	AES_set_decrypt_key(wrapper_key,256,&dec_KEK);
+	unwrp_key_len = AES_unwrap_key(&dec_KEK, 0, out, key_to_unwrap, KEY_LEN_BYTE+8);
+	if(unwrp_key_len != KEY_LEN_BYTE)return false;
+	else return true;
+}
+
+void getTransKey(unsigned char* aes_key, const char* pwd, const char* ACCN, bool printResult)
+{
+	char wrapped_base64[80];
+	memset(wrapped_base64,0,80);
+	
+	//~ unsigned char aes_key[KEY_LEN_BYTE];
+	unsigned char KeyEncryptionKey[KEY_LEN_BYTE];
+	int i=0;
+	
+	/* derive key from pwd + ACCN */
+	if(derive_key(KeyEncryptionKey, pwd, ACCN, 10000) == false)
+	{
+		fprintf(stderr, "error deriving key");
+		_exit(5);
+	}
+	else
+	{
+		if (printResult)
+		{
+			printf("derived key: ");
+			for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",KeyEncryptionKey[i]);
+			printf("\n\n");
+		}
+	}
+	
+	if(get_string_from_config(wrapped_base64,"security.transaction")==false)
+	{
+		fprintf(stderr,"failed to get transaction key from config");
+		_exit(5);
+	}
+	if(printResult)printf("b64 key from config : %s\n\n",wrapped_base64);
+	unsigned char *wrapped_unbase64 = (unsigned char *) unbase64((unsigned char *)wrapped_base64, strlen(wrapped_base64)+1);
+
+	if (printResult)
+	{
+		printf("wrapped unbase64 key: ");
+		for(i=0;i<KEY_LEN_BYTE+8;i++)printf("%.02X ",*(wrapped_unbase64+i));
+		printf("\n\n");
+	}
+	
+		/* unwrap key using KEK */
+	if(unwrap_aes_key(aes_key, KeyEncryptionKey, (unsigned char *)wrapped_unbase64) == false)
+	{
+		fprintf(stderr,"error unwrapping key");
+		_exit(5);
+	}
+	else
+	{
+		if (printResult)
+		{
+			printf("wrapped key: ");
+			int i=0;
+			for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",aes_key[i]);
+			printf("\n\n");
+		}
+	}
+}
+
+bool get_INT64_from_config(long long *value, const char *path)
+{
+	config_t cfg;
+
+	config_init(&cfg);
+
+	/* Read the file. If there is an error, report it and exit. */
+	if(! config_read_file(&cfg, "config.cfg"))
+	{
+		config_destroy(&cfg);
+		return false;	//return error
+	}
+
+	/* Get ACCN. */
+	if(config_lookup_int64(&cfg, path, (long long int *)value))
+	{
+		config_destroy(&cfg);
+		return true;
+	}
+	else
+	{
+		fprintf(stderr, "No mentioned setting in configuration file.\n");
+		config_destroy(&cfg);
+		return false;
+	}
+}
+
+bool decrypt_transaction_frame(unsigned char* output, unsigned char* input, unsigned char* IV, unsigned char* aes_key)
+{
+	/* DO NOT USE IV VALUE AGAIN! 
+	 * AFTER DECRYPT USING OpenSSL, IV VALUE CHANGED!! 
+	 */
+
+	AES_KEY dec_key;
+	AES_set_decrypt_key(aes_key, 256, &dec_key);
+	AES_cbc_encrypt(input, output, 32, &dec_key, IV, AES_DECRYPT);
+	
+	return true;
+}
+
+bool verify_data(unsigned char* data, int SESN, unsigned char* aes_key)
+{
+	int index = 0;
+	index++;
+	
+	char typeLen = *(data+index);
+	index++;
+	char payloadLen = *(data+index);
+	index++;
+	
+	// skip type
+	index += typeLen;
+	
+	unsigned char transData[payloadLen];
+	memset(transData, 0, payloadLen);
+	memcpy(transData, data+index, payloadLen);
+	
+	if(transData[0]!=55)return false;
+	if(transData[1]!=1)return false;
+	if(transData[2]!=0)return false;
+	
+	
+	int transSESN = (transData[3]<<8) | transData[4];
+	if(transSESN != SESN)_exit(6);
+	
+	unsigned char ciphertext[32];
+	memset(ciphertext, 0, 32);
+	memcpy(ciphertext, transData+7, 32);
+	
+	unsigned char IV[16];
+	memset(IV, 0, 16);
+	memcpy(IV, transData+39, 16);
+	
+	unsigned char decryptedPayload[32];
+	memset(decryptedPayload,0,32);
+	
+	if(decrypt_transaction_frame(decryptedPayload, ciphertext, IV, aes_key))
+	{
+		/* DO NOT USE IV VALUE AGAIN! 
+		 * AFTER DECRYPT USING OpenSSL, IV VALUE CHANGED!! 
+		 */
+
+		int encryptedSESN = (decryptedPayload[18]<<8)|decryptedPayload[19];
+		if(encryptedSESN != transSESN)return false;
+		
+		int i = 0;
+		for(i=0;i<12;i++)
+		{
+			if(decryptedPayload[20+i] != 12)return false;
+		}
+
+		return true;
+	}
+	else 
+	{
+		return false;
+	}
+}
+
 int main(int argc, char *argv[])
 {
-	//~ bool valid_arg = false;
+	bool valid_arg = false;
 	bool mode = WRITE_MODE;
 	
-	//~ if (argc == 2)
-	//~ {
-		//~ if(!strcmp(argv[1],"read"))
-		//~ {
-			//~ valid_arg = true;
-			//~ mode = READ_MODE;
-		//~ }
-		//~ else if(!strcmp(argv[1],"write"))
-		//~ {
-			//~ valid_arg = true;
-			//~ mode = WRITE_MODE;
-		//~ }
-		//~ else valid_arg = false;
-	//~ }
-	//~ 
-	//~ if (valid_arg == false)
-	//~ {
-		//~ fprintf(stdout,"\n");
-		//~ fprintf(stdout,"usage:\n");
-		//~ fprintf(stdout,"\t");
-		//~ fprintf(stdout,"./picc_emulation [PARAMETER]\n\n");
-		//~ fprintf(stdout,"PARAMETER:\n");
-		//~ fprintf(stdout,"\t");
-		//~ fprintf(stdout,"read \t: Read NDEF message from NFC Forum Type 4 Tag emulated by the reader to NFC-compliant Smartphone\n");
-		//~ fprintf(stdout,"\t");
-		//~ fprintf(stdout,"write \t: Write NDEF message from NFC-compliant Smartphone to NFC Forum Type 4 Tag emulated by the reader\n");
-		//~ fprintf(stdout,"\n");
-		//~ return 0;
-	//~ }
+	if (argc == 3)valid_arg = true;
+	else valid_arg = false;
+	
+	if (valid_arg == false)
+	{
+		fprintf(stderr,"Can not start NFC! wrong argument!\n");
+		return 5;
+	}
+	
+	int SESN = strtoimax(argv[2],NULL,10);
+	printf("SESN: %d\n", SESN);
+	
+	unsigned char aes_key[32];
+	long long ACCN;
+	char ACCNstr[32];
+	memset(ACCNstr, 0, 32);
+
+	if(get_INT64_from_config(&ACCN, "application.ACCN") == true) 
+		sprintf(ACCNstr, "%ju", ACCN);
+	else 
+	{
+		fprintf(stderr, "Failed to get ACCN from config");
+		return 5;
+	}
+
+	getTransKey(aes_key, argv[1], ACCNstr, false);
 	
 	//~ signal(SIGINT, intr_hdlr);
 	signal(SIGTERM, intr_hdlr);
@@ -194,6 +441,10 @@ int main(int argc, char *argv[])
 	memset(TgResponse, 0, 262);
 	
 	unsigned char TgResLen;
+	
+	unsigned char dataRaw[262];
+	memset(dataRaw, 0, 262);
+	unsigned char dataRawLen = 0;
 	
 	bool PICC_init = false;
 	while (!PICC_init)
@@ -373,21 +624,35 @@ int main(int argc, char *argv[])
 					unsigned char Lc = RetData[6];
 					
 					unsigned char P2 = RetData[5];
-					//~ if(P2>0)P2-=2;
 					
 					if(Lc > 2)
 					{
 						RcvdNDEFLen = P2+Lc;
 						for(i=0;i<Lc;i++)RcvdNDEF[i+P2] = RetData[7+i];
-						//~ print_data(RcvdNDEF, Lc-2, "NDEF");
+						TgResponse[0] = 0x90;
+						TgResponse[1] = 0x00;
+						TgResLen = 2;
 					}
-					
-					TgResponse[0] = 0x90;
-					TgResponse[1] = 0x00;
-					TgResLen = 2;
-					
-					write_complete = true;
-					
+					else if(Lc == 2)
+					{
+						dataRawLen = RcvdNDEFLen - 2;
+						memcpy(dataRaw, RcvdNDEF+2, dataRawLen);
+						if(verify_data(dataRaw, SESN, aes_key) == true)
+						{
+							write_complete = true;
+							TgResponse[0] = 0x90;
+							TgResponse[1] = 0x00;
+							TgResLen = 2;
+						}
+						else
+						{
+							TgResponse[0] = 0x6F;
+							TgResponse[1] = 0x00;
+							TgResLen = 2;
+							fprintf(stdout, "\nDATA: WRONG!\n");
+							return 7;
+						}
+					}					
 					break;
 				}
 				

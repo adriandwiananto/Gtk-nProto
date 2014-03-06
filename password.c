@@ -84,7 +84,7 @@ void read_pwd_entry()
 				/*entered password = stored password in config*/
 				if(!strcmp(hashedpassword, pwd_in_setting))
 				{
-					/* get key, debugging purpose only!! */
+#ifdef DEBUG_MODE
 					unsigned char aes_key[KEY_LEN_BYTE];
 					memset(aes_key,0,KEY_LEN_BYTE);
 					getTransKey(aes_key, pwd_entry_text, ACCNstr, FALSE);
@@ -95,7 +95,7 @@ void read_pwd_entry()
 						printf("%02X ",aes_key[i]);
 					}
 					printf("\n");
-					/* end of get key */
+#endif
 					
 					/*switch window to main menu*/
 					Bitwise WindowSwitcherFlag;

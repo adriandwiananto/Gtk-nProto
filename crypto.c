@@ -167,8 +167,10 @@ gboolean decrypt_transaction_frame(unsigned char* output, unsigned char* input, 
 
 	passwordStr = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
 
-	if(get_INT64_from_config(&ACCN, "application.ACCN") == TRUE)sprintf(ACCNstr, "%ju", ACCN);
-	else return FALSE;
+	if(get_INT64_from_config(&ACCN, "application.ACCN") == TRUE)
+		sprintf(ACCNstr, "%ju", ACCN);
+	else 
+		return FALSE;
 	
 	unsigned char aes_key[32];
 	memset(aes_key,0,32);

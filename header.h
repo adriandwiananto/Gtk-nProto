@@ -15,6 +15,8 @@
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
 
+#define DEBUG_MODE
+
 #ifndef _NPROTO_
 #define _NPROTO_
 
@@ -46,6 +48,20 @@ typedef struct
 	unsigned char payloadLen;
 }NdefHeader;
 
+typedef struct
+{
+	unsigned char PT;
+
+	unsigned char ACCNbyte[6];
+	unsigned long long ACCNlong;
+
+	unsigned char AMNTbyte[4];
+	unsigned long AMNTlong;
+
+	unsigned char TSbyte[4];
+	unsigned long TSlong;
+}transactionData;
+	
 typedef union
 {
 	struct 
@@ -184,4 +200,5 @@ EXTERN RegistrationWindow *registrationwindow;
 EXTERN int pass_attempt;
 EXTERN GPid nfc_poll_pid;
 EXTERN char nfc_data[128];
+EXTERN transactionData lastTransactionData;
 #endif

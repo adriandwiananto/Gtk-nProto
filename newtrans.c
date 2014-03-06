@@ -100,11 +100,10 @@ static void parse_nfc_data(GString *nfcdata)
 	unsigned char ReceivedData[data_len/2];
 	hexstrToBinArr(ReceivedData, data_only, data_len/2);
 
-	printf("Data in Array:\n");
+	printf("Received Data:\n");
 	for (i=0;i<data_len/2;i++) 
 	{
 		printf("%02X ", ReceivedData[i]);
-		if(!((i+1)%8))printf("\n");
 	}
 	printf("\n");
 	
@@ -163,28 +162,15 @@ static void parse_nfc_data(GString *nfcdata)
 
 static gboolean parse_transaction_frame(unsigned char *payload)
 {
-	int index = 0;
-	
-	unsigned char FL = *(payload+index);
-	index++;
-	unsigned char PT = *(payload+index);
-	index++;
-	unsigned char FF = *(payload+index);
-	index++;
-	
-	unsigned int SESNheader = (payload[index]<<8) | payload[index+1];
-	index += 4;
-	// skip 2 byte EH
+	unsigned char PT = payload[1];
 	
 	unsigned char encryptedPayload[32];
 	memset(encryptedPayload,0,32);
-	memcpy(encryptedPayload,payload+index,32);
-	index+=32;
+	memcpy(encryptedPayload,payload+7,32);
 	
 	unsigned char transIV[16];
 	memset(transIV,0,16);
-	memcpy(transIV,payload+index,16);
-	index+=16;
+	memcpy(transIV,payload+39,16);
 	
 	unsigned char decryptedPayload[32];
 	memset(decryptedPayload,0,32);
@@ -195,12 +181,42 @@ static gboolean parse_transaction_frame(unsigned char *payload)
 		 * AFTER DECRYPT USING OpenSSL, IV VALUE CHANGED!! 
 		 */
 		 
-		//write_transaction_log();
+		lastTransactionData.PT = PT;
+		memcpy(&lastTransactionData.ACCNbyte, decryptedPayload, 6);
+		memcpy(&lastTransactionData.AMNTbyte, decryptedPayload+10, 4);
+		memcpy(&lastTransactionData.TSbyte, decryptedPayload+6, 4);
+		
+		int i=0;
+		for(i=0; i<6; i++)
+		{
+			if(i)lastTransactionData.ACCNlong <<= 8;
+			lastTransactionData.ACCNlong |= lastTransactionData.ACCNbyte[i];
+		}
+		
+		/* gcc in 32-bit Linux always shift in 32 bit!
+		 * thus shifting > 32 bit always give wrong result
+		 * http://stackoverflow.com/a/11855612/3095632
+		 */
+		//~ lastTransactionData.ACCNlong = 	(lastTransactionData.ACCNbyte[0]<<40) | (lastTransactionData.ACCNbyte[1]<<32) | 
+										//~ (lastTransactionData.ACCNbyte[2]<<24) | (lastTransactionData.ACCNbyte[3]<<16) | 
+										//~ (lastTransactionData.ACCNbyte[4]<<8) | lastTransactionData.ACCNbyte[5];
+		
+		lastTransactionData.AMNTlong = 	(lastTransactionData.AMNTbyte[0]<<24) |	(lastTransactionData.AMNTbyte[1]<<16) | 
+										(lastTransactionData.AMNTbyte[2]<<8) | lastTransactionData.AMNTbyte[3];
+		
+		lastTransactionData.TSlong =	(lastTransactionData.TSbyte[0]<<24) |	(lastTransactionData.TSbyte[1]<<16) | 
+										(lastTransactionData.TSbyte[2]<<8) | lastTransactionData.TSbyte[3];
+						
+#ifdef DEBUG_MODE
+		unsigned char FL = *payload;
+		unsigned char FF = *(payload+2);
+		unsigned int SESNheader = (payload[3]<<8) | payload[4];
+
 		int z=0;
 		printf("\nFL: %02X\n",FL);
-		printf("PT: %02X\n",PT);
+		printf("PT: %02X\n",lastTransactionData.PT);
 		printf("FF: %02X\n",FF);
-		printf("SESN in header: %02X\n",SESNheader);
+		printf("SESN in header: %d\n",SESNheader);
 
 		printf("decrypted payload: \n");
 		for(z=0;z<32;z++)
@@ -215,6 +231,17 @@ static gboolean parse_transaction_frame(unsigned char *payload)
 			printf("%02X ", *(payload+(39+z)));
 		}
 		printf("\n");
+
+		printf("ACCN byte: ");
+		for(z=0;z<6;z++)printf("%02X ", lastTransactionData.ACCNbyte[z]);
+		printf("\n");
+		
+		printf(	"\nACCN: %ju | AMNT: %lu | TS: %lu\n", 
+				lastTransactionData.ACCNlong, 
+				lastTransactionData.AMNTlong, 
+				lastTransactionData.TSlong);
+#endif
+
 		return TRUE;
 	}
 	else
@@ -231,7 +258,16 @@ static void cb_child_watch( GPid pid, gint status, GString *data )
 	
 	if (WIFEXITED(status))
 	{
-		if(!WEXITSTATUS(status))notification_message("Transaction success!");
+		if(!WEXITSTATUS(status))
+		{
+			gchar successMsg[255];
+			sprintf(successMsg,
+					"Transaction Success!\nAmount: Rp. %'lu\nFrom: %ju\n",
+					lastTransactionData.AMNTlong,
+					lastTransactionData.ACCNlong);
+									
+			notification_message(successMsg);
+		}
 		else
 		{
 			switch(WEXITSTATUS(status))
@@ -242,10 +278,19 @@ static void cb_child_watch( GPid pid, gint status, GString *data )
 				case 2:
 					break;
 				case 3:
-					error_message("Transaction failed! error:3");
+					error_message("Transaction failed! Retry tapping your phone again. (error:3)");
 					break;
 				case 4:
-					error_message("Transaction failed! error:4");
+					error_message("Transaction failed! Retry tapping your phone again. (error:4)");
+					break;
+				case 5:
+					error_message("Reader initialization FATAL error!");
+					break;
+				case 6:
+					error_message("Wrong SESN input!");
+					break;
+				case 7:
+					error_message("FATAL error on customer's side!!");
 					break;
 				default:
 					error_message("Transaction failed! error:99");
@@ -332,9 +377,12 @@ static gboolean cb_err_watch( GIOChannel *channel, GIOCondition cond, GString *d
 /* create child process for nfc poll (call other program) */
 void nfc_poll_child_process(gchar *SESN)
 {
+	const gchar *passwordStr;
+	passwordStr = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
+	
     GPid        pid;
     //~ gchar      *argv[] = { "../../latihan/popen/./helloworld", NULL };
-    gchar      *argv[] = { "./picc_emulation_write", SESN, NULL };
+    gchar      *argv[] = { "./picc_emulation_write", (gchar*) passwordStr, SESN, NULL };
     gint        out,
                 err;
     GIOChannel *out_ch,

@@ -29,6 +29,8 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 		snprintf(SESN_text,  4, "%d", randomnumber);
 		gtk_label_set_text((GtkLabel *)newtranswindow->SESN_label, SESN_text);
 		
+		memset(&lastTransactionData,0,sizeof(lastTransactionData));
+		
 		gtk_widget_show(newtranswindow->window);
 		
 		//NFC polling goes in here
