@@ -95,8 +95,15 @@ void read_pwd_entry()
 						printf("%02X ",aes_key[i]);
 					}
 					printf("\n");
-#endif
 					
+					unsigned char logKey[32];
+					memset(logKey,0,32);
+					if(derive_key(logKey, pwd_entry_text, ACCNstr, 9000)==FALSE)fprintf(stderr,"error deriving key\n");
+					printf("log key:\n");
+					for(i=0;i<32;i++)printf("%02X ", logKey[i]);
+					printf("\n");
+
+#endif
 					/*switch window to main menu*/
 					Bitwise WindowSwitcherFlag;
 					f_status_window = FALSE;

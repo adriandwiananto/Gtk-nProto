@@ -1,5 +1,22 @@
 #include "header.h"
 
+/* abort registration, delete config and log file */
+static void abort_registration()
+{
+	if(remove("config.cfg") == 0)
+		printf("config.cfg deleted!\n");
+	else
+		printf("config.cfg not exists\n");
+		
+	if(remove("log.db") == 0)
+		printf("log.db deleted!\n");
+	else
+		printf("log.db not exists\n");
+	
+	error_message("Registration failed! Please retry registration process");
+	exit(1);
+}
+
 /*
 We call init_registration_window() when our program is starting to load 
 settlement window with references to Glade file. 
@@ -91,11 +108,10 @@ void on_registration_request_button_clicked()
 				if(create_new_config_file(ACCN, (const char *)hashed) == FALSE)
 				{
 					error_message("Error creating config file");
+					abort_registration();
 				}
 				else
 				{
-					notification_message("Registration Success! Restart the application");
-					
 					/* put registration ACCN to server
 					 * get key from server
 					 */
@@ -117,7 +133,10 @@ void on_registration_request_button_clicked()
 					
 					/* derive key from password + ACCN */
 					if(derive_key(KeyEncryptionKey, new_pwd_entry, new_ACCN_entry, 10000) == FALSE)
+					{
 						error_message("KEK derivation error");
+						abort_registration();
+					}
 #ifdef DEBUG_MODE
 					else
 					{
@@ -130,7 +149,10 @@ void on_registration_request_button_clicked()
 
 					/* wrap key using KEK */
 					if(wrap_aes_key(wrapped_key, KeyEncryptionKey, aes_key) == FALSE)
+					{
 						error_message("error wrapping key");
+						abort_registration();
+					}
 #ifdef DEBUG_MODE
 					else
 					{
@@ -165,6 +187,10 @@ void on_registration_request_button_clicked()
 						printf("\n\n");
 					}
 #endif
+
+					if(createDB_and_table() == FALSE)abort_registration();
+
+					notification_message("Registration Success! Restart the application");
 
 					gtk_main_quit();
 				}

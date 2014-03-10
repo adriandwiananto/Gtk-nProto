@@ -183,3 +183,130 @@ gboolean decrypt_transaction_frame(unsigned char* output, unsigned char* input, 
 	
 	return TRUE;
 }
+
+gboolean encrypt_lastTransaction_log(unsigned char* logHexInStr, unsigned int logNum)
+{
+	unsigned char logPlain[32];
+	uintmax_t ACCN;
+	if(get_INT64_from_config(&ACCN, "application.ACCN") == FALSE) return FALSE;
+
+	gchar ACCNstr[32];
+	memset(ACCNstr, 0, 32);
+	sprintf(ACCNstr, "%ju", ACCN);
+
+	logPlain[0] = (logNum >> 16) & 0xFF;
+	logPlain[1] = (logNum >> 8) & 0xFF;
+	logPlain[2] = logNum & 0xFF;
+	logPlain[3] = lastTransactionData.PT;
+	memset(logPlain+4,0,4);
+	memcpy(logPlain+8,lastTransactionData.ACCNbyte,6);
+	
+	int i=0;
+	for(i=5; i>=0; i--)
+	{
+		if(i<5)ACCN >>= 8;
+		logPlain[14+i] = ACCN & 0xFF;
+	}
+	
+	memcpy(logPlain+20, lastTransactionData.AMNTbyte,4);
+	memcpy(logPlain+24, lastTransactionData.TSbyte,4);
+	logPlain[28] = 0;	//STAT
+	logPlain[29] = 0;	//CNL
+	memset(logPlain+30,2,2); //PADDING
+
+#ifdef DEBUG_MODE	
+	unsigned char plainByte[80];
+	memset(plainByte,0,80);
+	unsigned char* buf_ptr = plainByte;
+	for (i = 0; i < 32; i++)
+	{
+		buf_ptr += sprintf((char*)buf_ptr, "%02X", logPlain[i]);
+	}
+	*(buf_ptr + 1) = '\0';
+	printf("plainByte: %s\n", plainByte);
+#endif
+
+	unsigned char logKey[32];
+	memset(logKey,0,32);
+	
+	unsigned char logEncrypted[32];
+	memset(logEncrypted,0,32);
+	
+	unsigned char logToWrite[48];
+	memset(logToWrite,0,48);
+	
+	const gchar *password;
+	password = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
+	
+	printf("pwd:%s,ACCN:%s\n",password,ACCNstr);
+	if(derive_key(logKey, password, ACCNstr, 9000) == FALSE)
+	{
+		fprintf(stderr,"error derive log key\n");
+		return FALSE;
+	}
+	else
+	{
+		unsigned char IV[16]; //, iv_dec[AES_BLOCK_SIZE];
+		RAND_bytes(IV, 16);
+		memcpy(logToWrite+32,IV,16);
+
+#ifdef DEBUG_MODE		
+		printf("IV:\n");
+		for(i=0;i<16;i++)printf("%02X ", IV[i]);
+		printf("\n");
+		printf("log key:\n");
+		for(i=0;i<32;i++)printf("%02X ", logKey[i]);
+		printf("\n");
+		printf("logPlain:\n");
+		for(i=0;i<32;i++)printf("%02X ", logPlain[i]);
+		printf("\n");
+#endif
+
+		AES_KEY enc_key;
+		AES_set_encrypt_key(logKey, 256, &enc_key);
+		AES_cbc_encrypt(logPlain, logEncrypted, 32, &enc_key, IV, AES_ENCRYPT);
+
+#ifdef DEBUG_MODE		
+		printf("log encrypted:\n");
+		for(i=0;i<32;i++)printf("%02X ", logEncrypted[i]);
+		printf("\n");
+		
+		unsigned char logDecrypted[32];
+		memset(logDecrypted,0,32);
+		
+		memcpy(IV, logToWrite+32, 16);
+		printf("IV:\n");
+		for(i=0;i<16;i++)printf("%02X ", IV[i]);
+		printf("\n");
+		printf("log key:\n");
+		for(i=0;i<32;i++)printf("%02X ", logKey[i]);
+		printf("\n");
+		
+		AES_KEY dec_key;
+		AES_set_decrypt_key(logKey, 256, &dec_key);
+		AES_cbc_encrypt(logEncrypted, logDecrypted, 32, &dec_key, IV, AES_DECRYPT);
+
+		printf("log decrypted:\n");
+		for(i=0;i<32;i++)printf("%02X ", logDecrypted[i]);
+		printf("\n");
+#endif
+		
+		memcpy(logToWrite,logEncrypted,32);
+	}
+
+#ifdef DEBUG_MODE	
+	printf("log to write (encrypted+iv):\n");
+	for(i=0;i<48;i++)printf("%02X ", logToWrite[i]);
+	printf("\n");
+#endif
+
+	buf_ptr = logHexInStr;
+	for (i = 0; i < 48; i++)
+	{
+		buf_ptr += sprintf((char*)buf_ptr, "%02X", logToWrite[i]);
+	}
+	*(buf_ptr + 1) = '\0';
+	printf("logHexInStr: %s\n", logHexInStr);
+	
+	return TRUE;
+}

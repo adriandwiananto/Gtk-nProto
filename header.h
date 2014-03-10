@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <glib.h>
+#include <time.h>
 #include <sys/wait.h>
 #include <openssl/aes.h>
 #include <openssl/rand.h>
@@ -35,6 +36,12 @@
 #define f_option_window		 	WindowSwitcherFlag.bit5
 #define f_registration_window	WindowSwitcherFlag.bit6
 #define f_status_window 		WindowSwitcherFlag.status
+
+typedef struct
+{
+	unsigned char* KeyEncryptionKey[32];
+	unsigned char* LogKey[32];
+}CryptoKey;
 
 typedef struct
 {
@@ -172,6 +179,13 @@ gboolean decrypt_transaction_frame(unsigned char* output, unsigned char* input, 
 /*spawn function*/
 void nfc_poll_child_process(gchar *SESN);
 
+/*log function*/
+gboolean createDB_and_table();
+gboolean write_lastTransaction_log();
+gboolean encrypt_lastTransaction_log(unsigned char* logHexInStr, unsigned int logNum);
+int read_log_blob(unsigned char *dest, int row);
+int logNum();
+
 /*other function*/
 void read_pwd_entry();
 void error_message (const gchar *message);
@@ -179,7 +193,7 @@ void notification_message (const gchar *message);
 void WindowSwitcher(Bitwise WindowSwitcherFlag);
 int random_number_generator(int min_number, int max_number);
 void parse_log_file();
-void write_to_history_tree(ssize_t read, char* line, gint lognum, GtkTreeIter *iter);
+void hexstrToBinArr(unsigned char* dest, gchar* source, gsize destlength);
 
 #ifndef DECLARE_VARIABLES
 #define EXTERN /* nothing */
@@ -201,4 +215,5 @@ EXTERN int pass_attempt;
 EXTERN GPid nfc_poll_pid;
 EXTERN char nfc_data[128];
 EXTERN transactionData lastTransactionData;
+EXTERN CryptoKey cryptoKey;
 #endif

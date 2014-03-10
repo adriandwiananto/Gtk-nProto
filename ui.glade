@@ -5,10 +5,12 @@
     <columns>
       <!-- column-name Number -->
       <column type="gint"/>
-      <!-- column-name Content -->
+      <!-- column-name Date -->
       <column type="gchararray"/>
-      <!-- column-name Length -->
-      <column type="gint"/>
+      <!-- column-name ACCN -->
+      <column type="guint64"/>
+      <!-- column-name Amount -->
+      <column type="guint"/>
     </columns>
   </object>
   <object class="GtkWindow" id="history_window">
@@ -77,15 +79,15 @@
         </child>
         <child>
           <object class="GtkScrolledWindow" id="scrolledwindow1">
-            <property name="width_request">410</property>
-            <property name="height_request">310</property>
+            <property name="width_request">650</property>
+            <property name="height_request">490</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="shadow_type">in</property>
             <child>
               <object class="GtkTreeView" id="history_treeview">
-                <property name="width_request">400</property>
-                <property name="height_request">300</property>
+                <property name="width_request">640</property>
+                <property name="height_request">480</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="model">historystore</property>
@@ -106,12 +108,12 @@
                   </object>
                 </child>
                 <child>
-                  <object class="GtkTreeViewColumn" id="contentcol">
+                  <object class="GtkTreeViewColumn" id="TScol">
                     <property name="sizing">fixed</property>
-                    <property name="fixed_width">280</property>
-                    <property name="title" translatable="yes">Content</property>
+                    <property name="fixed_width">130</property>
+                    <property name="title" translatable="yes">Date</property>
                     <child>
-                      <object class="GtkCellRendererText" id="contentcell"/>
+                      <object class="GtkCellRendererText" id="TScell"/>
                       <attributes>
                         <attribute name="text">1</attribute>
                       </attributes>
@@ -119,14 +121,27 @@
                   </object>
                 </child>
                 <child>
-                  <object class="GtkTreeViewColumn" id="lengthcol">
+                  <object class="GtkTreeViewColumn" id="ACCNcol">
                     <property name="sizing">fixed</property>
-                    <property name="fixed_width">70</property>
-                    <property name="title" translatable="yes">Length</property>
+                    <property name="fixed_width">290</property>
+                    <property name="title" translatable="yes">Sender's ID</property>
                     <child>
-                      <object class="GtkCellRendererText" id="lengthcell"/>
+                      <object class="GtkCellRendererText" id="ACCNcell"/>
                       <attributes>
                         <attribute name="text">2</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="AMNTcol">
+                    <property name="sizing">fixed</property>
+                    <property name="fixed_width">175</property>
+                    <property name="title" translatable="yes">Amount</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="AMNTcell"/>
+                      <attributes>
+                        <attribute name="text">3</attribute>
                       </attributes>
                     </child>
                   </object>

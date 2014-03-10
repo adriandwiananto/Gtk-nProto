@@ -70,7 +70,7 @@ void on_new_trans_cancel_button_clicked ()
 }
 
 /* hex written as string to binary Array */
-static void hexstrToBinArr(unsigned char* dest, gchar* source, gsize destlength)
+void hexstrToBinArr(unsigned char* dest, gchar* source, gsize destlength)
 {
 	int i;
 	
@@ -265,8 +265,11 @@ static void cb_child_watch( GPid pid, gint status, GString *data )
 					"Transaction Success!\nAmount: Rp. %'lu\nFrom: %ju\n",
 					lastTransactionData.AMNTlong,
 					lastTransactionData.ACCNlong);
-									
-			notification_message(successMsg);
+					
+			if(write_lastTransaction_log() == FALSE)
+				error_message("fail to write to log");
+			else
+				notification_message(successMsg);
 		}
 		else
 		{
