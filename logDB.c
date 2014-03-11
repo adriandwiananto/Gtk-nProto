@@ -18,7 +18,6 @@ int logNum()
 		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 		return FALSE;
 	}
-	else fprintf(stdout, "Opened database successfully\n");
 
 	/* Create SQL statement */
 	if(sqlite3_prepare_v2(db, zSql, strlen(zSql), &res, &tail) != SQLITE_OK)
@@ -58,7 +57,6 @@ gboolean createDB_and_table()
 		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 		return FALSE;
 	}
-	else fprintf(stdout, "Opened database successfully\n");
 
 	/* Create SQL statement */
 	sql = 	"CREATE TABLE TransLog("  \
@@ -97,7 +95,6 @@ gboolean write_lastTransaction_log()
 		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 		return FALSE;
 	}
-	else fprintf(stderr, "Opened database successfully\n");
 
 	/* Create SQL statement */
 	sprintf(sql, "INSERT INTO TransLog(ID, LOG) VALUES(%u, x'%s');", logRowToWrite, logHexInStr);
@@ -136,7 +133,6 @@ int read_log_blob(unsigned char *dest, int row)
 		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 		return 0;
 	}
-	else fprintf(stdout, "Opened database successfully\n");
 
 	/* Create SQL statement */
 	if(sqlite3_prepare_v2(db, zSql, strlen(zSql), &res, &tail) != SQLITE_OK)
@@ -163,4 +159,75 @@ int read_log_blob(unsigned char *dest, int row)
 	sqlite3_close(db);
 	
 	return len;
+}
+
+void convert_DBdata_to_TreeView_Data(unsigned char *DB_BLOB_data, int logLen, 
+unsigned int *lognum, char *timebuffer, uintmax_t *senderACCN, unsigned int*amount)
+{
+	unsigned char fromDBbyte[64];
+	memset(fromDBbyte,0,64);
+	
+	unsigned char IV[16];
+	memset(IV,0,16);
+
+	unsigned char logKey[32];
+	memset(logKey,0,32);
+	
+	unsigned char logDecrypted[32];
+	memset(logDecrypted,0,32);
+	int z=0;
+
+	if(getLogKey(logKey)==FALSE)fprintf(stderr,"error deriving key\n");
+
+	hexstrToBinArr(fromDBbyte,(gchar*)DB_BLOB_data,logLen/2);
+	
+	memcpy(IV, fromDBbyte+32, 16);	
+
+#ifdef DEBUG_MODE
+	printf("from DB: %s, length: %d\n",DB_BLOB_data,logLen);
+
+	printf("byte array:\n");
+	for(z=0;z<logLen/2;z++)printf("%02X ",fromDBbyte[z]);
+	printf("\n");
+
+	printf("IV:\n");
+	for(z=0;z<16;z++)printf("%02X ", IV[z]);
+	printf("\n");
+#endif
+
+	AES_KEY dec_key;
+	AES_set_decrypt_key(logKey, 256, &dec_key);
+	AES_cbc_encrypt(fromDBbyte, logDecrypted, 32, &dec_key, IV, AES_DECRYPT);
+
+	unsigned int TS = (logDecrypted[24]<<24) | (logDecrypted[25]<<16) | (logDecrypted[26]<<8) | (logDecrypted[27]);
+	time_t rawtime = TS;
+	struct tm *timeinfo;
+	timeinfo = localtime(&rawtime);
+	strftime (timebuffer,80,"%d/%m/%Y %H:%M",timeinfo);
+
+#ifdef DEBUG_MODE
+	printf("log key:\n");
+	for(z=0;z<32;z++)printf("%02X ", logKey[z]);
+	printf("\n");
+
+	printf("log decrypted:\n");
+	for(z=0;z<32;z++)printf("%02X ", logDecrypted[z]);
+	printf("\n");
+
+	printf ("timestamp:%s\n",timebuffer);
+#endif
+	
+	*amount = (logDecrypted[20]<<24) | (logDecrypted[21]<<16) | (logDecrypted[22]<<8) | (logDecrypted[23]);
+	
+	for(z=0; z<6; z++)
+	{
+		if(z)(*senderACCN) <<= 8;
+		else (*senderACCN) = 0;
+		(*senderACCN) |= logDecrypted[8+z];
+#ifdef DEBUG_MODE
+		printf("ACCN[%d]:%llx\n", z, (*senderACCN));
+#endif
+	}
+	
+	*lognum = (logDecrypted[0]<<16) | (logDecrypted[1]<<8) | (logDecrypted[2]);
 }

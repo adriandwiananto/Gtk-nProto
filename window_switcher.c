@@ -44,7 +44,6 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 	/*history window switcher*/
 	if(f_history_window == TRUE)
 	{
-		parse_log_file();
 		gtk_widget_show(historywindow->window);
 	}
 	else
@@ -55,9 +54,15 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 	/*settlement window switcher*/
 	if(f_settlement_window == TRUE)
 	{
-		gchar *settlement_balance = "Rp50.000";
-		gtk_label_set_text((GtkLabel *)settlementwindow->total_label, settlement_balance);
+		gchar balanceToWrite[32];
+		memset(balanceToWrite,0,32);
 		
+		sprintf(balanceToWrite, "Rp %'d", settlementwindow->settlement_balance);
+		gtk_label_set_text((GtkLabel *)settlementwindow->total_label, balanceToWrite);
+		
+		if(settlementwindow->settlement_balance)
+			gtk_widget_set_sensitive(settlementwindow->claim_button, TRUE);
+
 		gtk_widget_show(settlementwindow->window);
 	}
 	else

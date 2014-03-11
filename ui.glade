@@ -79,14 +79,14 @@
         </child>
         <child>
           <object class="GtkScrolledWindow" id="scrolledwindow1">
-            <property name="width_request">650</property>
+            <property name="width_request">535</property>
             <property name="height_request">490</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="shadow_type">in</property>
             <child>
               <object class="GtkTreeView" id="history_treeview">
-                <property name="width_request">640</property>
+                <property name="width_request">525</property>
                 <property name="height_request">480</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -110,7 +110,7 @@
                 <child>
                   <object class="GtkTreeViewColumn" id="TScol">
                     <property name="sizing">fixed</property>
-                    <property name="fixed_width">130</property>
+                    <property name="fixed_width">150</property>
                     <property name="title" translatable="yes">Date</property>
                     <child>
                       <object class="GtkCellRendererText" id="TScell"/>
@@ -123,7 +123,7 @@
                 <child>
                   <object class="GtkTreeViewColumn" id="ACCNcol">
                     <property name="sizing">fixed</property>
-                    <property name="fixed_width">290</property>
+                    <property name="fixed_width">200</property>
                     <property name="title" translatable="yes">Sender's ID</property>
                     <child>
                       <object class="GtkCellRendererText" id="ACCNcell"/>
@@ -136,7 +136,7 @@
                 <child>
                   <object class="GtkTreeViewColumn" id="AMNTcol">
                     <property name="sizing">fixed</property>
-                    <property name="fixed_width">175</property>
+                    <property name="fixed_width">133</property>
                     <property name="title" translatable="yes">Amount</property>
                     <child>
                       <object class="GtkCellRendererText" id="AMNTcell"/>

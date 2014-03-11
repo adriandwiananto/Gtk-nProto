@@ -256,6 +256,8 @@ static void cb_child_watch( GPid pid, gint status, GString *data )
 {
 	data = g_string_new(NULL);
 	
+	gtk_widget_hide(newtranswindow->window);
+
 	if (WIFEXITED(status))
 	{
 		if(!WEXITSTATUS(status))
@@ -269,7 +271,10 @@ static void cb_child_watch( GPid pid, gint status, GString *data )
 			if(write_lastTransaction_log() == FALSE)
 				error_message("fail to write to log");
 			else
+			{
+				parse_log_file_and_write_to_treeview(logNum(), logNum());
 				notification_message(successMsg);
+			}
 		}
 		else
 		{
@@ -293,7 +298,7 @@ static void cb_child_watch( GPid pid, gint status, GString *data )
 					error_message("Wrong SESN input!");
 					break;
 				case 7:
-					error_message("FATAL error on customer's side!!");
+					error_message("FATAL error on customer's side!! Wrong transaction key!");
 					break;
 				default:
 					error_message("Transaction failed! error:99");
@@ -305,8 +310,6 @@ static void cb_child_watch( GPid pid, gint status, GString *data )
 	/* Close pid */
     g_spawn_close_pid( pid );
     
-    gtk_widget_hide(newtranswindow->window);
-	
     g_string_free(data,TRUE);
 }
 

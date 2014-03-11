@@ -16,7 +16,7 @@
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
 
-#define DEBUG_MODE
+//~ #define DEBUG_MODE
 
 #ifndef _NPROTO_
 #define _NPROTO_
@@ -113,6 +113,8 @@ typedef struct
 {
 	GtkWidget *window;
 	GtkWidget *total_label;
+	GtkWidget *claim_button;
+	int settlement_balance;
 }SettlementWindow;
 
 typedef struct
@@ -175,6 +177,7 @@ gboolean unwrap_aes_key(unsigned char *out, unsigned char *wrapper_key, unsigned
 gboolean derive_key(unsigned char *out, const gchar *password, const gchar *salt, unsigned int iteration);
 void getTransKey(unsigned char* aes_key, const gchar* password, const gchar* ACCN, gboolean printResult);
 gboolean decrypt_transaction_frame(unsigned char* output, unsigned char* input, unsigned char* IV);
+gboolean getLogKey(unsigned char* logKey);
 
 /*spawn function*/
 void nfc_poll_child_process(gchar *SESN);
@@ -185,6 +188,7 @@ gboolean write_lastTransaction_log();
 gboolean encrypt_lastTransaction_log(unsigned char* logHexInStr, unsigned int logNum);
 int read_log_blob(unsigned char *dest, int row);
 int logNum();
+void convert_DBdata_to_TreeView_Data(unsigned char *DB_BLOB_data, int logLen, unsigned int *lognum, char *timebuffer, uintmax_t *senderACCN, unsigned int*amount);
 
 /*other function*/
 void read_pwd_entry();
@@ -192,7 +196,7 @@ void error_message (const gchar *message);
 void notification_message (const gchar *message);
 void WindowSwitcher(Bitwise WindowSwitcherFlag);
 int random_number_generator(int min_number, int max_number);
-void parse_log_file();
+void parse_log_file_and_write_to_treeview(int startRow, int endRow);
 void hexstrToBinArr(unsigned char* dest, gchar* source, gsize destlength);
 
 #ifndef DECLARE_VARIABLES
@@ -216,4 +220,5 @@ EXTERN GPid nfc_poll_pid;
 EXTERN char nfc_data[128];
 EXTERN transactionData lastTransactionData;
 EXTERN CryptoKey cryptoKey;
+
 #endif

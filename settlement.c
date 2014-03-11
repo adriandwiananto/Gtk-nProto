@@ -21,9 +21,17 @@ gboolean init_settlement_window()
 	/* get the widgets which will be referenced in callbacks */
 	settlementwindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "settlement_window"));
 	settlementwindow->total_label = GTK_WIDGET (gtk_builder_get_object (builder, "settlement_balance_label"));
-
+	settlementwindow->claim_button = GTK_WIDGET (gtk_builder_get_object (builder, "settlement_claim_button"));
+	
 	gtk_builder_connect_signals (builder, settlementwindow);
 	g_object_unref(G_OBJECT(builder));
+	
+	gchar *settlement_balance = "Rp 0";
+	settlementwindow->settlement_balance = 0;
+
+	gtk_label_set_text((GtkLabel *)settlementwindow->total_label, settlement_balance);
+
+	gtk_widget_set_sensitive(settlementwindow->claim_button, FALSE);
 	
 	return TRUE;
 }

@@ -190,10 +190,6 @@ gboolean encrypt_lastTransaction_log(unsigned char* logHexInStr, unsigned int lo
 	uintmax_t ACCN;
 	if(get_INT64_from_config(&ACCN, "application.ACCN") == FALSE) return FALSE;
 
-	gchar ACCNstr[32];
-	memset(ACCNstr, 0, 32);
-	sprintf(ACCNstr, "%ju", ACCN);
-
 	logPlain[0] = (logNum >> 16) & 0xFF;
 	logPlain[1] = (logNum >> 8) & 0xFF;
 	logPlain[2] = logNum & 0xFF;
@@ -214,10 +210,12 @@ gboolean encrypt_lastTransaction_log(unsigned char* logHexInStr, unsigned int lo
 	logPlain[29] = 0;	//CNL
 	memset(logPlain+30,2,2); //PADDING
 
+	unsigned char* buf_ptr;
+	
 #ifdef DEBUG_MODE	
 	unsigned char plainByte[80];
 	memset(plainByte,0,80);
-	unsigned char* buf_ptr = plainByte;
+	buf_ptr = plainByte;
 	for (i = 0; i < 32; i++)
 	{
 		buf_ptr += sprintf((char*)buf_ptr, "%02X", logPlain[i]);
@@ -235,11 +233,7 @@ gboolean encrypt_lastTransaction_log(unsigned char* logHexInStr, unsigned int lo
 	unsigned char logToWrite[48];
 	memset(logToWrite,0,48);
 	
-	const gchar *password;
-	password = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
-	
-	printf("pwd:%s,ACCN:%s\n",password,ACCNstr);
-	if(derive_key(logKey, password, ACCNstr, 9000) == FALSE)
+	if(getLogKey(logKey) == FALSE)
 	{
 		fprintf(stderr,"error derive log key\n");
 		return FALSE;
@@ -309,4 +303,24 @@ gboolean encrypt_lastTransaction_log(unsigned char* logHexInStr, unsigned int lo
 	printf("logHexInStr: %s\n", logHexInStr);
 	
 	return TRUE;
+}
+
+gboolean getLogKey(unsigned char* logKey)
+{
+	uintmax_t ACCN;
+	get_INT64_from_config(&ACCN, "application.ACCN");
+	const gchar *password;
+	password = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
+
+	gchar ACCNstr[32];
+	memset(ACCNstr, 0, 32);
+	sprintf(ACCNstr, "%ju", ACCN);
+	
+	if(derive_key(logKey, password, ACCNstr, 9000)==FALSE)
+	{
+		fprintf(stderr,"error deriving key\n");
+		return FALSE;
+	}
+	else
+		return TRUE;
 }

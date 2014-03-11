@@ -47,29 +47,9 @@ void on_history_close_button_clicked ()
 	WindowSwitcher(WindowSwitcherFlag);
 }
 
-void parse_log_file()
+void parse_log_file_and_write_to_treeview(int startRow, int endRow)
 {
 	GtkTreeIter iter;
-	
-	//~ gint lognum = 1;
-	//~ FILE *logfile;
-	//~ char *line = NULL;
-	//~ size_t len = 0;
-	//~ ssize_t read;
-	
-	//~ /*open file with filename "log"*/
-	//~ logfile = fopen("log","r");
-	//~ if(logfile == NULL)error_message("fail to open log file");
-	//~ 
-	//~ /*read every line of the file until EOF (-1)*/
-	//~ while((read = getline(&line, &len, logfile)) != -1)
-	//~ {
-		//~ /*write line to gtk tree*/
-		//~ write_to_history_tree(read, line, lognum, &iter);
-		//~ lognum++;
-	//~ }
-	
-	
 	
 	/* check log row in db
 	 * pull first row
@@ -79,95 +59,26 @@ void parse_log_file()
 	 * etc
 	 */
 	
-	int logRow = logNum();
 	int logLen;
 	int i = 0;
 	unsigned char fromDB[128];
 	memset(fromDB,0,128);
-	unsigned char fromDBbyte[64];
-	memset(fromDBbyte,0,64);
 
-	unsigned char logDecrypted[32];
-	memset(logDecrypted,0,32);
-	
-	unsigned char IV[16];
-	memset(IV,0,16);
-
-	unsigned char logKey[32];
-	memset(logKey,0,32);
-
-	uintmax_t ACCN;
-	get_INT64_from_config(&ACCN, "application.ACCN");
-	const gchar *password;
-	password = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
-
-	gchar ACCNstr[32];
-	memset(ACCNstr, 0, 32);
-	sprintf(ACCNstr, "%ju", ACCN);
-	
-	printf("pwd:%s,ACCN:%s\n",password,ACCNstr);
-	if(derive_key(logKey, password, ACCNstr, 9000)==FALSE)fprintf(stderr,"error deriving key\n");
-	
-	for(i = 0; i < logRow; i++)
+	for(i = startRow; i <= endRow; i++)
 	{
-		logLen = read_log_blob(fromDB,i+1);
+		logLen = read_log_blob(fromDB,i);
 		if(logLen)
 		{
-#ifdef DEBUG_MODE
-			printf("from DB: %s, length: %d\n",fromDB,logLen);
-#endif
-			hexstrToBinArr(fromDBbyte,(gchar*)fromDB,logLen/2);
-			
-			int z=0;
-			printf("byte array:\n");
-			for(z=0;z<logLen/2;z++)printf("%02X ",fromDBbyte[z]);
-			printf("\n");
-			
-			memcpy(IV, fromDBbyte+32, 16);	
+			unsigned int lognum = 0;
+			char timebuffer[80];
+			memset(timebuffer,0,80);
+			uintmax_t senderACCN = 0;
+			unsigned int amount = 0;
 
-			printf("IV:\n");
-			for(z=0;z<16;z++)printf("%02X ", IV[z]);
-			printf("\n");
-			printf("log key:\n");
-			for(z=0;z<32;z++)printf("%02X ", logKey[z]);
-			printf("\n");
+			convert_DBdata_to_TreeView_Data(fromDB, logLen, &lognum, timebuffer, &senderACCN, &amount);
+			settlementwindow->settlement_balance += amount;
 			
-			AES_KEY dec_key;
-			AES_set_decrypt_key(logKey, 256, &dec_key);
-			AES_cbc_encrypt(fromDBbyte, logDecrypted, 32, &dec_key, IV, AES_DECRYPT);
-
-			printf("log decrypted:\n");
-			for(z=0;z<32;z++)printf("%02X ", logDecrypted[z]);
-			printf("\n");
-			
-			unsigned int TS = (logDecrypted[24]<<24) | (logDecrypted[25]<<16) | (logDecrypted[26]<<8) | (logDecrypted[27]);
-			time_t rawtime = TS;
-			struct tm timeinfo;
-			char timebuffer [80];
-
-			(void) localtime_r(&rawtime, &timeinfo);
-			strftime (timebuffer,80,"%d/%m/%Y %H:%M",&timeinfo);
-			printf ("timestamp:%s\n",timebuffer);
-			
-			unsigned int amount = (logDecrypted[20]<<24) | (logDecrypted[21]<<16) | (logDecrypted[22]<<8) | (logDecrypted[23]);
-			uintmax_t senderACCN;
-			
-			for(z=0; z<6; z++)
-			{
-				if(i)senderACCN <<= 8;
-				senderACCN |= logDecrypted[8+i];
-			}
-			
-			unsigned int lognum = (logDecrypted[0]<<16) | (logDecrypted[1]<<8) | (logDecrypted[2]);
-
 			printf("lognum:%d,senderACCN:%ju, Amount:%d\n", lognum,senderACCN, amount);
-			char ACCNstring[20];
-			memset(ACCNstring, 0, 20);
-			sprintf(ACCNstring, "%ju", senderACCN);
-			char AmountString[10];
-			memset(AmountString, 0, 10);
-			sprintf(AmountString, "%d", amount);
-			printf("lognum:%d,senderACCN:%s, Amount:%s\n", lognum,ACCNstring, AmountString);
 
 			write_to_history_tree(senderACCN, amount, timebuffer, lognum, &iter);
 		}
