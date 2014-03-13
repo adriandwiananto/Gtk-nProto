@@ -15,8 +15,10 @@
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
+#include <curl/curl.h>
+#include <json/json.h>
 
-//~ #define DEBUG_MODE
+#define DEBUG_MODE
 
 #ifndef _NPROTO_
 #define _NPROTO_
@@ -36,6 +38,13 @@
 #define f_option_window		 	WindowSwitcherFlag.bit5
 #define f_registration_window	WindowSwitcherFlag.bit6
 #define f_status_window 		WindowSwitcherFlag.status
+
+
+typedef struct
+{
+	char *ptr;
+	size_t len;
+}ResponseString;
 
 typedef struct
 {
@@ -163,7 +172,7 @@ gboolean init_registration_window();
 
 /*libconfig function*/
 int config_checking();
-gboolean create_new_config_file(uintmax_t ACCN, const char *password);
+gboolean create_new_config_file(uintmax_t ACCN, const char *password, char *HWID);
 gboolean get_INT64_from_config(uintmax_t *value, const char *path);
 gboolean get_string_from_config(char *value, const char *path);
 gboolean write_string_to_config(char *value, const char *path);
@@ -190,6 +199,13 @@ int read_log_blob(unsigned char *dest, int row);
 int logNum();
 void convert_DBdata_to_TreeView_Data(unsigned char *DB_BLOB_data, int logLen, unsigned int *lognum, char *timebuffer, uintmax_t *senderACCN, unsigned int*amount);
 
+/*network function*/
+gboolean send_jsonstring_to_server(gchar* aesKeyString, const char* jsonString, const char* serverName);
+
+/*json function*/
+json_object* create_registration_json(const gchar* ACCN, char* HWID);
+const char* get_key_inString_from_json_response(json_object* jobj);
+
 /*other function*/
 void read_pwd_entry();
 void error_message (const gchar *message);
@@ -198,6 +214,7 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag);
 int random_number_generator(int min_number, int max_number);
 void parse_log_file_and_write_to_treeview(int startRow, int endRow);
 void hexstrToBinArr(unsigned char* dest, gchar* source, gsize destlength);
+gboolean get_USB_reader_HWID (char* hwid);
 
 #ifndef DECLARE_VARIABLES
 #define EXTERN /* nothing */

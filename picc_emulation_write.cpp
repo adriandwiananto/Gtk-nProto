@@ -322,6 +322,21 @@ int main(int argc, char *argv[])
 	bool mode = WRITE_MODE;
 	
 	if (argc == 3)valid_arg = true;
+	else if ((argc == 2) && (!strcmp(argv[1],"hwid")))
+	{
+		CV_SetCommunicationType(1);
+
+		int currentAddress = 99;
+		int &currentAddressPtr = currentAddress;
+		char HWID[16];
+		memset(HWID,0,16);
+		if(!GetSerialNum(DEVICE_ADDRESS, currentAddressPtr, HWID))
+		{
+			fprintf(stdout,"DATA:%s\n", HWID);
+			return 0;
+		}
+		else return 1;
+	}
 	else valid_arg = false;
 	
 	if (valid_arg == false)
@@ -331,7 +346,7 @@ int main(int argc, char *argv[])
 	}
 	
 	int SESN = strtoimax(argv[2],NULL,10);
-	printf("SESN: %d\n", SESN);
+	//~ printf("SESN: %d\n", SESN);
 	
 	unsigned char aes_key[32];
 	long long ACCN;

@@ -102,7 +102,6 @@ void read_pwd_entry()
 					printf("log key:\n");
 					for(i=0;i<32;i++)printf("%02X ", logKey[i]);
 					printf("\n");
-
 #endif
 
 					parse_log_file_and_write_to_treeview(1,logNum()); //print all log file to treeview for the first time

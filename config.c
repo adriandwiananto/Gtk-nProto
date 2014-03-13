@@ -30,11 +30,8 @@ int config_checking()
 	}
 }	
 
-gboolean create_new_config_file(uintmax_t ACCN, const char* password)
+gboolean create_new_config_file(uintmax_t ACCN, const char* password, char* HWID)
 {
-	//~ printf("ACCN: %ju\n",ACCN);
-	//~ printf("password: %s\n",password);
-	
 	config_t cfg;
 	config_setting_t *root, *group, *setting;
 	static const char *output_file = "config.cfg";
@@ -54,9 +51,13 @@ gboolean create_new_config_file(uintmax_t ACCN, const char* password)
 	setting = config_setting_add(group, "Pwd", CONFIG_TYPE_STRING);
 	config_setting_set_string(setting, password);
 	
+	/*create HWID setting with string type in application group*/
+	setting = config_setting_add(group, "HWID", CONFIG_TYPE_STRING);
+	config_setting_set_string(setting, HWID);
+	
 	/*create LATS setting with INT64 type in application group*/
-	setting = config_setting_add(group, "LATS", CONFIG_TYPE_INT64);
-	config_setting_set_int64(setting, 0);
+	//~ setting = config_setting_add(group, "LATS", CONFIG_TYPE_INT64);
+	//~ config_setting_set_int64(setting, 0);
 	
 	/*create application group as root group*/
 	group = config_setting_add(root, "security", CONFIG_TYPE_GROUP);
