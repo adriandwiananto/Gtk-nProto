@@ -198,6 +198,7 @@ gboolean encrypt_lastTransaction_log(unsigned char* logHexInStr, unsigned int lo
 int read_log_blob(unsigned char *dest, int row);
 int logNum();
 void convert_DBdata_to_TreeView_Data(unsigned char *DB_BLOB_data, int logLen, unsigned int *lognum, char *timebuffer, uintmax_t *senderACCN, unsigned int*amount);
+gboolean update_encrypted_log(char* logToWriteInStr, int Row);
 
 /*network function*/
 gboolean send_jsonstring_to_server(gchar* aesKeyString, const char* jsonString, const char* serverName);

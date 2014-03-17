@@ -113,6 +113,39 @@ gboolean write_lastTransaction_log()
 	return TRUE;
 }
 
+gboolean update_encrypted_log(char* logToWriteInStr, int Row)
+{
+	sqlite3 *db;
+	char *zErrMsg = 0;
+	int rc;
+	char sql[512];
+	memset(sql,0,512);
+	
+	/* Open database */
+	rc = sqlite3_open("log.db", &db);
+	if( rc )
+	{
+		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+		return FALSE;
+	}
+
+	/* Create SQL statement */
+	sprintf(sql, "UPDATE TransLog SET LOG=x'%s' WHERE ID=%u;", logToWriteInStr, Row);
+
+	/* Execute SQL statement */
+	rc = sqlite3_exec(db, sql, NULL, NULL, &zErrMsg);
+	if( rc != SQLITE_OK )
+	{
+		fprintf(stderr, "SQL error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+		return FALSE;
+	}
+	else fprintf(stdout, "Records #%u updated successfully\n", Row);
+
+	sqlite3_close(db);
+	return TRUE;
+}
+
 int read_log_blob(unsigned char *dest, int row)
 {
 	sqlite3 *db;
