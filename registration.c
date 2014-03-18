@@ -17,7 +17,8 @@ static void abort_registration()
 	exit(1);
 }
 
-static gboolean send_regData_get_aesKey(unsigned char* aesKey, const gchar* ACCN, char* HWID)
+//~ static gboolean send_regData_get_aesKey(unsigned char* aesKey, const gchar* ACCN, char* HWID)
+static gboolean send_regData_get_aesKey(unsigned char* aesKey, uintmax_t ACCN, int HWID)
 {
 	json_object *jobj = create_registration_json(ACCN,HWID);
 	gchar aesKeyString[65];
@@ -25,7 +26,7 @@ static gboolean send_regData_get_aesKey(unsigned char* aesKey, const gchar* ACCN
 	
 	printf("json object in string: %s\n",json_object_to_json_string(jobj));
 	
-	if(send_jsonstring_to_server	(aesKeyString, 
+	if(send_reg_jsonstring_to_server	(aesKeyString, 
 									json_object_to_json_string(jobj), 
 									"http://emoney-server.herokuapp.com/sync.json") == FALSE)
 		return FALSE;
@@ -96,6 +97,7 @@ void on_registration_ACCN_entry_insert_text(GtkEditable *buffer, gchar *new_text
 /* Callback for Request button in registration window */
 void on_registration_request_button_clicked()
 {
+	
 	const gchar *new_pwd_entry, *confirm_pwd_entry, *new_ACCN_entry;
 	
 	/* hashed password+salt written in hex as string
@@ -134,6 +136,8 @@ void on_registration_request_button_clicked()
 				memset(HWID,0,16);
 				if(get_USB_reader_HWID(HWID) == TRUE)
 				{
+					int HWIDint = strtoimax(HWID,NULL,10);
+					
 					/*hash password and use ACCN as salt*/
 					passwordhashing(hashed, confirm_pwd_entry, new_ACCN_entry);
 					printf("hashed: %s\n", hashed);
@@ -141,7 +145,8 @@ void on_registration_request_button_clicked()
 					unsigned char aes_key[KEY_LEN_BYTE];
 					memset(aes_key,0,KEY_LEN_BYTE);
 
-					if(send_regData_get_aesKey(aes_key, new_ACCN_entry, HWID) == FALSE)
+					//~ if(send_regData_get_aesKey(aes_key, new_ACCN_entry, HWID) == FALSE)
+					if(send_regData_get_aesKey(aes_key, ACCN, HWIDint) == FALSE)
 						abort_registration();
 						
 					/*create new config file (with error checking)*/
@@ -219,6 +224,8 @@ void on_registration_request_button_clicked()
 #endif
 
 					if(createDB_and_table() == FALSE)abort_registration();
+					
+					write_int64_to_config((uintmax_t)time(NULL), "application.LATS");
 
 					notification_message("Registration Success! Restart the application");
 

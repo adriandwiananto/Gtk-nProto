@@ -176,6 +176,7 @@ gboolean create_new_config_file(uintmax_t ACCN, const char *password, char *HWID
 gboolean get_INT64_from_config(uintmax_t *value, const char *path);
 gboolean get_string_from_config(char *value, const char *path);
 gboolean write_string_to_config(char *value, const char *path);
+gboolean write_int64_to_config(uintmax_t value, const char *path);
 
 /*crypto function*/
 void passwordhashing(char *hashed, const gchar *password, const gchar *salt);
@@ -187,6 +188,7 @@ gboolean derive_key(unsigned char *out, const gchar *password, const gchar *salt
 void getTransKey(unsigned char* aes_key, const gchar* password, const gchar* ACCN, gboolean printResult);
 gboolean decrypt_transaction_frame(unsigned char* output, unsigned char* input, unsigned char* IV);
 gboolean getLogKey(unsigned char* logKey);
+void json_log_array_hashing(char *hashed, const char *json_array);
 
 /*spawn function*/
 void nfc_poll_child_process(gchar *SESN);
@@ -201,11 +203,13 @@ void convert_DBdata_to_TreeView_Data(unsigned char *DB_BLOB_data, int logLen, un
 gboolean update_encrypted_log(char* logToWriteInStr, int Row);
 
 /*network function*/
-gboolean send_jsonstring_to_server(gchar* aesKeyString, const char* jsonString, const char* serverName);
+gboolean send_reg_jsonstring_to_server(gchar* aesKeyString, const char* jsonString, const char* serverName);
+gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonString, const char* serverName);
 
 /*json function*/
-json_object* create_registration_json(const gchar* ACCN, char* HWID);
+json_object* create_registration_json(uintmax_t ACCN, int HWID);
 const char* get_key_inString_from_json_response(json_object* jobj);
+json_object* create_log_as_json_object();
 
 /*other function*/
 void read_pwd_entry();

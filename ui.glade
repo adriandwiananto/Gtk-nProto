@@ -666,25 +666,6 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="registration_request_button">
-            <property name="label" translatable="yes">Request</property>
-            <property name="width_request">100</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="halign">center</property>
-            <property name="valign">center</property>
-            <property name="margin_left">5</property>
-            <signal name="clicked" handler="on_registration_request_button_clicked" swapped="no"/>
-          </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">4</property>
-            <property name="width">1</property>
-            <property name="height">1</property>
-          </packing>
-        </child>
-        <child>
           <object class="GtkButton" id="registration_cancel_button">
             <property name="label" translatable="yes">Cancel</property>
             <property name="width_request">100</property>
@@ -801,6 +782,25 @@
           <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">0</property>
+            <property name="width">1</property>
+            <property name="height">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="registration_request_button">
+            <property name="label" translatable="yes">Request</property>
+            <property name="width_request">100</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
+            <property name="margin_left">5</property>
+            <signal name="clicked" handler="on_registration_request_button_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">4</property>
             <property name="width">1</property>
             <property name="height">1</property>
           </packing>

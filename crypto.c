@@ -28,6 +28,26 @@ void passwordhashing(char *hashed, const gchar *password, const gchar *salt)
 	hashed[SHA256_DIGEST_LENGTH*2]=0;
 }
 
+void json_log_array_hashing(char *hashed, const char *json_array)
+{
+	SHA256_CTX context;
+	/*hash result container (in binary)*/
+	unsigned char hashbin[SHA256_DIGEST_LENGTH];
+	int i;
+	
+	/*hash log and write the binary result to hashbin*/
+	SHA256_Init(&context);
+	SHA256_Update(&context, (unsigned char*)json_array, strlen(json_array));
+	SHA256_Final(hashbin, &context);
+	
+	/*convert hash result from binary to string*/
+	for(i = 0; i<SHA256_DIGEST_LENGTH; i++)
+	{
+		sprintf(&hashed[i*2], "%02X", hashbin[i]);
+	}
+	hashed[SHA256_DIGEST_LENGTH*2]=0;
+}
+
 char *unbase64(unsigned char *input, int length)
 {
 	BIO *b64, *bmem;

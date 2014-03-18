@@ -1,5 +1,7 @@
 #include "header.h"
 
+static gboolean send_log_to_server();
+
 /*
 We call init_settlement_window() when our program is starting to load 
 settlement window with references to Glade file. 
@@ -39,7 +41,15 @@ gboolean init_settlement_window()
 /* Callback for Claim button in settlement window */
 void on_settlement_claim_button_clicked()
 {
-	
+	if(send_log_to_server() == TRUE)
+	{
+		notification_message("Settlement Success!");
+		gtk_widget_hide(settlementwindow->window);
+	}
+	else
+	{
+		error_message("Settlement Fail!");
+	}
 }
 
 /* Callback for Cancel button in settlement window */
@@ -52,3 +62,18 @@ void on_settlement_cancel_button_clicked()
 	WindowSwitcher(WindowSwitcherFlag);
 }
 
+static gboolean send_log_to_server()
+{
+	json_object* log_jobj = create_log_as_json_object();
+
+	gchar aesKeyString[65];
+	memset(aesKeyString,0,65);
+	
+	if(send_log_jsonstring_to_server	(aesKeyString, 
+									json_object_to_json_string(log_jobj), 
+									"http://emoney-server.herokuapp.com/sync.json") == FALSE)
+		return FALSE;
+	else
+		//DELETE LOG
+		return TRUE;
+}
