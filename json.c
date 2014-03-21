@@ -70,8 +70,10 @@ json_object* create_log_as_json_object()
 				int PT = logDecrypted[3];
 				unsigned int BinID = logDecrypted[4]<<24 | logDecrypted[5]<<16 |  logDecrypted[6]<<8 | logDecrypted[7];
 				
-				int64_t ACCN_R, ACCN_S;
-				 
+				uintmax_t ACCN_R, ACCN_S;
+				ACCN_R=0;
+				ACCN_S=0;
+				
 				int z=0;
 				for(z=0; z<6; z++)
 				{
@@ -83,6 +85,9 @@ json_object* create_log_as_json_object()
 					ACCN_R |= logDecrypted[8+z];
 					ACCN_S |= logDecrypted[14+z];
 				}
+				
+				ACCN_R &= 0xFFFFFFFFFFFF;
+				ACCN_S &= 0xFFFFFFFFFFFF;
 				
 				unsigned int AMNT = logDecrypted[20]<<24 | logDecrypted[21]<<16 |  logDecrypted[22]<<8 | logDecrypted[23];
 				unsigned int TS = logDecrypted[24]<<24 | logDecrypted[25]<<16 |  logDecrypted[26]<<8 | logDecrypted[27];

@@ -98,24 +98,46 @@ gboolean send_reg_jsonstring_to_server(gchar* aesKeyString, const char* jsonStri
 	return TRUE;
 }
 
-gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonString, const char* serverName)
+gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonHeader, const char* jsonLogs, const char* serverName)
 {
+	const char *headerPost = "header=";
+	const char *logsPost = "&logs=";
 	CURL *curl;
 	CURLcode res;
 
 	enum json_type type = json_type_null;
 
 	char *dataBuffer;
-	dataBuffer = (char *) malloc ((strlen(jsonString)+5)*sizeof(char));
+	int total_len = strlen(jsonHeader)+strlen(jsonLogs)+strlen(headerPost)+strlen(logsPost);
+	
+	dataBuffer = (char *) malloc (total_len+1);
 	if(dataBuffer == NULL) 
 		return FALSE;
 	
+	int index = 0;
+	
 	memset(dataBuffer,0,sizeof(dataBuffer));
-	strcpy(dataBuffer,"data=");
-	memcpy(dataBuffer+5,jsonString, strlen(jsonString));
+
+	memcpy(dataBuffer,headerPost,strlen(headerPost));
+	index += strlen(headerPost);
+	
+	memcpy(dataBuffer+index,jsonHeader, strlen(jsonHeader));
+	index += strlen(jsonHeader);
+	
+	memcpy(dataBuffer+index,logsPost,strlen(logsPost));
+	index += strlen(logsPost);
+	
+	memcpy(dataBuffer+index,jsonLogs, strlen(jsonLogs));
+	index += strlen(jsonLogs);
+	
+	dataBuffer[index] = '\0';
 
 #ifdef DEBUG_MODE	
 	printf("dataBuffer:%s\n",dataBuffer);
+	
+	//~ int i=0;
+	//~ for(i=0;i<strlen(dataBuffer);i++)printf("dBuff[%d]:%c, ",i,dataBuffer[i]);
+	//~ printf("\n");
 #endif
 
 	/* get a curl handle */ 
@@ -147,7 +169,7 @@ gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonStri
 		
 #ifdef DEBUG_MODE		
 		printf("response in string:%s\n", response.ptr);
-		printf("length:%d\n", response.len);
+		printf("response length:%d\n", response.len);
 #endif
 		
 		//~ memcpy(serverResponse, response.ptr, response.len);

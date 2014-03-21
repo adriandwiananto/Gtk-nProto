@@ -186,12 +186,14 @@ static gboolean parse_transaction_frame(unsigned char *payload)
 		memcpy(&lastTransactionData.AMNTbyte, decryptedPayload+10, 4);
 		memcpy(&lastTransactionData.TSbyte, decryptedPayload+6, 4);
 		
+		lastTransactionData.ACCNlong = 0;
 		int i=0;
 		for(i=0; i<6; i++)
 		{
 			if(i)lastTransactionData.ACCNlong <<= 8;
 			lastTransactionData.ACCNlong |= lastTransactionData.ACCNbyte[i];
 		}
+		lastTransactionData.ACCNlong &= 0xFFFFFFFFFFFF;
 		
 		/* gcc in 32-bit Linux always shift in 32 bit!
 		 * thus shifting > 32 bit always give wrong result

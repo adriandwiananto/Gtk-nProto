@@ -252,6 +252,7 @@ unsigned int *lognum, char *timebuffer, uintmax_t *senderACCN, unsigned int*amou
 	
 	*amount = (logDecrypted[20]<<24) | (logDecrypted[21]<<16) | (logDecrypted[22]<<8) | (logDecrypted[23]);
 	
+	*senderACCN = 0;
 	for(z=0; z<6; z++)
 	{
 		if(z)(*senderACCN) <<= 8;
@@ -261,6 +262,7 @@ unsigned int *lognum, char *timebuffer, uintmax_t *senderACCN, unsigned int*amou
 		printf("ACCN[%d]:%llx\n", z, (*senderACCN));
 #endif
 	}
+	(*senderACCN) &= 0xFFFFFFFFFFFF;
 	
 	*lognum = (logDecrypted[0]<<16) | (logDecrypted[1]<<8) | (logDecrypted[2]);
 }

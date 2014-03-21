@@ -204,7 +204,7 @@ gboolean update_encrypted_log(char* logToWriteInStr, int Row);
 
 /*network function*/
 gboolean send_reg_jsonstring_to_server(gchar* aesKeyString, const char* jsonString, const char* serverName);
-gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonString, const char* serverName);
+gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonHeader, const char* jsonLogs, const char* serverName);
 
 /*json function*/
 json_object* create_registration_json(uintmax_t ACCN, int HWID);

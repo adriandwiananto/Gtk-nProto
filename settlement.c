@@ -65,12 +65,15 @@ void on_settlement_cancel_button_clicked()
 static gboolean send_log_to_server()
 {
 	json_object* log_jobj = create_log_as_json_object();
-
+	json_object* log_jHeader = json_object_object_get(log_jobj, "header");
+	json_object* log_jLogs = json_object_object_get(log_jobj, "logs");
+	
 	gchar aesKeyString[65];
 	memset(aesKeyString,0,65);
 	
 	if(send_log_jsonstring_to_server	(aesKeyString, 
-									json_object_to_json_string(log_jobj), 
+									json_object_to_json_string(log_jHeader), 
+									json_object_to_json_string(log_jLogs),
 									"http://emoney-server.herokuapp.com/sync.json") == FALSE)
 		return FALSE;
 	else
