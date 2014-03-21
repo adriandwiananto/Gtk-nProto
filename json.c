@@ -11,11 +11,16 @@ const char* get_key_inString_from_json_response(json_object* jobj)
 
 json_object* create_registration_json(uintmax_t ACCN, int HWID)
 {
+	gchar ACCNstr[32];
+	memset(ACCNstr, 0, 32);
+	sprintf(ACCNstr,"%ju",ACCN);
+	
 	/*Creating a json object*/
 	json_object * jobj = json_object_new_object();
 
 	/*Creating a json string*/
-	json_object *jint64_ACCN = json_object_new_int64(ACCN);
+	//~ json_object *jint64_ACCN = json_object_new_int64(ACCN);
+	json_object *jint64_ACCN = json_object_new_string(ACCNstr);
 
 	/*Creating a json string*/
 	json_object *jint_HWID = json_object_new_int(HWID);

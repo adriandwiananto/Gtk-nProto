@@ -28,7 +28,7 @@ static gboolean send_regData_get_aesKey(unsigned char* aesKey, uintmax_t ACCN, i
 	
 	if(send_reg_jsonstring_to_server	(aesKeyString, 
 									json_object_to_json_string(jobj), 
-									"http://emoney-server.herokuapp.com/sync.json") == FALSE)
+									"http://emoney-server.herokuapp.com/register.json") == FALSE)
 		return FALSE;
 	
 	hexstrToBinArr(aesKey, aesKeyString, 32);

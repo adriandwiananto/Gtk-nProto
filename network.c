@@ -86,6 +86,9 @@ gboolean send_reg_jsonstring_to_server(gchar* aesKeyString, const char* jsonStri
 		
 		//~ memcpy(serverResponse, response.ptr, response.len);
 		json_object * jobj_response = json_tokener_parse(response.ptr);
+		json_object * response_status = json_object_object_get(jobj_response,"result");
+		if(!strcmp(json_object_get_string(response_status),"Error"))
+			return FALSE;
 		jobj_response = json_object_object_get(jobj_response, "key");
 		memcpy(aesKeyString, json_object_get_string(jobj_response), strlen(json_object_get_string(jobj_response)));
 
