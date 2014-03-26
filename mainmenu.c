@@ -1,4 +1,7 @@
 #include "header.h"
+#include <dirent.h>
+
+static pid_t proc_find(const char* name);
 
 /*
 We call init_mainmenu_window() when our program is starting to load 
@@ -30,12 +33,22 @@ gboolean init_mainmenu_window()
 /* callback for New Trans button in main menu window */
 void on_mm_new_trans_button_clicked ()
 {
-	/*open new trans window*/
-	Bitwise WindowSwitcherFlag;
-	f_status_window = FALSE;
-	f_mainmenu_window = TRUE;
-	f_newtrans_window = TRUE;
-	WindowSwitcher(WindowSwitcherFlag);
+	pid_t pid = proc_find("./picc_emulation_write");
+	if(pid == -1)
+	{
+		/*open new trans window*/
+		Bitwise WindowSwitcherFlag;
+		f_status_window = FALSE;
+		f_mainmenu_window = TRUE;
+		f_newtrans_window = TRUE;
+		WindowSwitcher(WindowSwitcherFlag);
+	}
+	else
+	{
+		printf("unfinished process pid: %d\n",pid);
+		kill(pid, SIGTERM);
+		notification_message("Please wait a moment before \nstarting new transaction");
+	}
 }
 
 /* callback for History button in main menu window */
@@ -76,4 +89,47 @@ void on_mm_exit_button_clicked ()
 {
 	/*exit application*/
 	gtk_main_quit();
+}
+
+static pid_t proc_find(const char* name) 
+{
+    DIR* dir;
+    struct dirent* ent;
+    char* endptr;
+    char buf[512];
+
+    if (!(dir = opendir("/proc"))) {
+        perror("can't open /proc");
+        return -1;
+    }
+
+    while((ent = readdir(dir)) != NULL) {
+        /* if endptr is not a null character, the directory is not
+         * entirely numeric, so ignore it */
+        long lpid = strtol(ent->d_name, &endptr, 10);
+        if (*endptr != '\0') {
+            continue;
+        }
+
+        /* try to open the cmdline file */
+        snprintf(buf, sizeof(buf), "/proc/%ld/cmdline", lpid);
+        FILE* fp = fopen(buf, "r");
+
+        if (fp) {
+            if (fgets(buf, sizeof(buf), fp) != NULL) {
+                /* check the first token in the file, the program name */
+                char* first = strtok(buf, " ");
+                if (!strcmp(first, name)) {
+                    fclose(fp);
+                    closedir(dir);
+                    return (pid_t)lpid;
+                }
+            }
+            fclose(fp);
+        }
+
+    }
+
+    closedir(dir);
+    return -1;
 }

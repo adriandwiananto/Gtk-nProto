@@ -1,7 +1,7 @@
 /* return list
  * 0 : normal
  * 1 : USB reader initialization error
- * 2 : killed by SIGTERM
+ * 2 : killed by signal (SIGTERM / SIGINT)
  * 3 : NFC PICC Response fail (APDU Transaction Error)
  * 4 : NFC PICC Command fail (APDU Transaction Error)
  * 5 : program initialization error
@@ -40,13 +40,16 @@
 #define AES_MODE (256)
 #define KEY_LEN_BYTE AES_MODE/8 
 
+bool complete = false;
+int force_exit = 0;
+bool PICC_init = false;
+bool PICC_NDEF_detection = false;
+
 static void
 intr_hdlr(int sig)
 {
-  (void) sig;
-  fprintf(stderr,"killed!\n");
-  CloseComm();
-  _exit(2);
+	fprintf(stdout,"killed with %d signal\n", sig);
+	force_exit = 2;
 }
 
 void print_data(unsigned char *Data, unsigned char Len, const char *Type)
@@ -318,6 +321,16 @@ bool verify_data(unsigned char* data, int SESN, unsigned char* aes_key)
 
 int main(int argc, char *argv[])
 {
+	struct sigaction ctrlcHandler;
+    memset(&ctrlcHandler, 0, sizeof(struct sigaction));
+    ctrlcHandler.sa_handler = intr_hdlr;
+    sigaction(SIGINT, &ctrlcHandler, NULL);
+    
+    struct sigaction killHandler;
+    memset(&killHandler, 0, sizeof(struct sigaction));
+    killHandler.sa_handler = intr_hdlr;
+    sigaction(SIGTERM, &killHandler, NULL);
+    
 	bool valid_arg = false;
 	bool mode = WRITE_MODE;
 	
@@ -362,9 +375,6 @@ int main(int argc, char *argv[])
 	}
 
 	getTransKey(aes_key, argv[1], ACCNstr, false);
-	
-	//~ signal(SIGINT, intr_hdlr);
-	signal(SIGTERM, intr_hdlr);
 	
 	//Reader connect with USB interface
 	CV_SetCommunicationType(1);
@@ -461,248 +471,258 @@ int main(int argc, char *argv[])
 	memset(dataRaw, 0, 262);
 	unsigned char dataRawLen = 0;
 	
-	bool PICC_init = false;
-	while (!PICC_init)
+	while (!complete && !force_exit)
 	{
-		usleep(300*1000);
-		//~ int NFC_Picc_Init (	int DeviceAddress, unsigned char Mode, unsigned char* MParam,
-							//~ unsigned char* FParam, unsigned char* NFCID3t, unsigned char GtLen,
-							//~ unsigned char* Gt, unsigned char TkLen, unsigned char* Tk, 
-							//~ unsigned char* RetData)
-		if(!NFC_Picc_Init(DEVICE_ADDRESS, 0x05, MParam, FParam, NFCID3t, empty, &empty, empty, &empty, RetData))
+		PICC_init = false;
+		while(!PICC_init && !force_exit)
 		{
-			if(RetData[0] != 0)
+			//~ usleep(300*1000);
+			//~ int NFC_Picc_Init (	int DeviceAddress, unsigned char Mode, unsigned char* MParam,
+								//~ unsigned char* FParam, unsigned char* NFCID3t, unsigned char GtLen,
+								//~ unsigned char* Gt, unsigned char TkLen, unsigned char* Tk, 
+								//~ unsigned char* RetData)
+			if(!NFC_Picc_Init(DEVICE_ADDRESS, 0x05, MParam, FParam, NFCID3t, empty, &empty, empty, &empty, RetData))
 			{
-				fprintf(stdout,"Init OK!\n");
-				print_data(RetData,RetData[0],"RetData");
-				PICC_init = true;
-			}
-			else fprintf(stderr,"Init fail!\n");
-		}
-		else fprintf(stderr,"Init func call fail!\n");
-		
-	}
-	
-	int i;
-	unsigned char INS;
-
-	bool PICC_NDEF_detection = false;
-	bool write_complete = false;
-	while(!PICC_NDEF_detection)
-	{
-		memset(RetData, 0, 262);
-		memset(TgResponse, 0, 262);
-		if(!NFC_Picc_Command(DEVICE_ADDRESS, RetData))
-		{
-			fprintf(stdout,"NFC Picc Command OK!\n");
-			print_data(RetData,RetData[0],"RetData");
-			
-			INS = RetData[3];
-			
-			switch(INS)
-			{
-				case SELECT:
+				if(RetData[0] != 0)
 				{
-					bool Flag = false;
-					unsigned char Lc;
-					Lc = RetData[6];
-					unsigned char DataBytes[Lc];
+					fprintf(stdout,"Init OK!\n");
+					print_data(RetData,RetData[0],"RetData");
+					PICC_init = true;
+				}
+				else fprintf(stderr,"Init fail!\n");
+			}
+			else fprintf(stderr,"Init func call fail!\n");
+		}
+	
+		int i;
+		unsigned char INS;
 
-					if (Lc)
+		PICC_NDEF_detection = false;
+		while(!PICC_NDEF_detection && !force_exit)
+		{
+			memset(RetData, 0, 262);
+			memset(TgResponse, 0, 262);
+			if(!NFC_Picc_Command(DEVICE_ADDRESS, RetData))
+			{
+				fprintf(stdout,"NFC Picc Command OK!\n");
+				print_data(RetData,RetData[0],"RetData");
+				
+				INS = RetData[3];
+				
+				switch(INS)
+				{
+					case SELECT:
 					{
-						for(i=0;i<Lc;i++)DataBytes[i]=RetData[7+i];
-					}
-					
-					if (Lc == 7) //NDEF Tag Application Select
-					{
-						unsigned char CmpData[7] = {0xD2,0x76,0x00,0x00,0x85,0x01,0x01};
+						bool Flag = false;
+						unsigned char Lc;
+						Lc = RetData[6];
+						unsigned char DataBytes[Lc];
 
-						for(i=0;i<7;i++)
+						if (Lc)
 						{
-							if(DataBytes[i]==CmpData[i])Flag = true;
+							for(i=0;i<Lc;i++)DataBytes[i]=RetData[7+i];
+						}
+						
+						if (Lc == 7) //NDEF Tag Application Select
+						{
+							unsigned char CmpData[7] = {0xD2,0x76,0x00,0x00,0x85,0x01,0x01};
+
+							for(i=0;i<7;i++)
+							{
+								if(DataBytes[i]==CmpData[i])Flag = true;
+								else Flag = false;
+							}
+							
+							if(Flag == true) //Type 4 tag ver2.0
+							{
+								TgResponse[0] = 0x6A;
+								TgResponse[1] = 0x82;
+								TgResLen = 2;
+							}
+							else //Type 4 tag ver1.0
+							{
+								TgResponse[0] = 0x90;
+								TgResponse[1] = 0x00;
+								TgResLen = 2;
+							}	
+						}
+						else if (Lc == 2)
+						{
+							//Capability Container & NDEF Select command
+							if(DataBytes[0] == 0xE1)
+							{
+								if(DataBytes[1] == 0x03 || DataBytes[1] == 0x04)
+									Flag = true;
+								else
+									Flag = false;
+							}
 							else Flag = false;
-						}
-						
-						if(Flag == true) //Type 4 tag ver2.0
-						{
-							TgResponse[0] = 0x6A;
-							TgResponse[1] = 0x82;
-							TgResLen = 2;
-						}
-						else //Type 4 tag ver1.0
-						{
-							TgResponse[0] = 0x90;
-							TgResponse[1] = 0x00;
-							TgResLen = 2;
-						}	
-					}
-					else if (Lc == 2)
-					{
-						//Capability Container & NDEF Select command
-						if(DataBytes[0] == 0xE1)
-						{
-							if(DataBytes[1] == 0x03 || DataBytes[1] == 0x04)
-								Flag = true;
+							
+							if(Flag == true)
+							{
+								TgResponse[0] = 0x90;
+								TgResponse[1] = 0x00;
+								TgResLen = 2;
+							}
 							else
-								Flag = false;
-						}
-						else Flag = false;
-						
-						if(Flag == true)
-						{
-							TgResponse[0] = 0x90;
-							TgResponse[1] = 0x00;
-							TgResLen = 2;
+							{
+								TgResponse[0] = 0x6A;
+								TgResponse[1] = 0x82;
+								TgResLen = 2;
+							}	
 						}
 						else
 						{
-							TgResponse[0] = 0x6A;
-							TgResponse[1] = 0x82;
+							TgResponse[0] = 0x6F;
+							TgResponse[1] = 0x00;
 							TgResLen = 2;
-						}	
+						}
+						break;
 					}
-					else
+					
+					case READ_BINARY:
 					{
+						unsigned char Le;
+						Le = RetData[6];
+						
+						if (Le == 0x0F) //Read binary data from CC file
+						{
+							//See NFCForum Tech Spec Type 4 Tag 2.0
+							//Page 29 (Appendix C.1, Detection of NDEF Message)
+							//Slight modification in Max NDEF Size (50 -> 1024)
+							unsigned char ResBuff[17] 	= { 0x00,0x0F,0x10,0x00,
+															0x3B,0x00,0x34,0x04,
+															0x06,0xE1,0x04,0x04,
+															0x00,0x00,0x00,0x90,
+															0x00 };
+							memcpy(TgResponse, ResBuff, 17);
+							TgResLen = 17;
+						}
+						else if (Le == 2) //Read NDEF Length
+						{
+							if (mode == READ_MODE)
+							{
+								//0x00E9 = Total NDEF length + 2 byte (for NLEN)
+								unsigned char ResBuff[4]	= {	0x00,0xE9,0x90,0x00 };
+								memcpy(TgResponse, ResBuff, 4);
+								TgResLen = 4;
+							}
+							else
+							{
+								//0x0005 = Total NDEF length + 2 byte (for NLEN)
+								unsigned char ResBuff[4]	= {	0x00,0x05,0x90,0x00 };
+								memcpy(TgResponse, ResBuff, 4);
+								TgResLen = 4;
+							}
+						}
+						else
+						{
+							if (Le)
+							{
+								unsigned char P2;
+								P2 = RetData[5];
+								if (mode == READ_MODE)
+								{
+									memcpy(TgResponse, All_Read_Data+P2, Le);
+								}
+								else
+								{
+									memcpy(TgResponse, All_Write_Data+P2, Le);
+								}
+								
+								unsigned char SW1SW2[2] = {0x90,0x00};
+								memcpy(TgResponse+Le, SW1SW2, 2);
+								TgResLen = Le+2;
+							}
+							else
+							{
+								TgResponse[0] = 0x6F;
+								TgResponse[1] = 0x00;
+								TgResLen = 2;
+							}
+						}
+						break;
+					}
+					
+					case UPDATE_BINARY:
+					{
+						unsigned char Lc = RetData[6];
+						
+						unsigned char P2 = RetData[5];
+						
+						if(Lc > 2)
+						{
+							RcvdNDEFLen = P2+Lc;
+							for(i=0;i<Lc;i++)RcvdNDEF[i+P2] = RetData[7+i];
+							TgResponse[0] = 0x90;
+							TgResponse[1] = 0x00;
+							TgResLen = 2;
+						}
+						else if(Lc == 2)
+						{
+							dataRawLen = RcvdNDEFLen - 2;
+							memcpy(dataRaw, RcvdNDEF+2, dataRawLen);
+							if(verify_data(dataRaw, SESN, aes_key) == true)
+							{
+								complete = true;
+								TgResponse[0] = 0x90;
+								TgResponse[1] = 0x00;
+								TgResLen = 2;
+							}
+							else
+							{
+								TgResponse[0] = 0x6F;
+								TgResponse[1] = 0x00;
+								TgResLen = 2;
+								fprintf(stdout, "\nDATA: WRONG!\n");
+								force_exit = 7;
+							}
+						}					
+						break;
+					}
+					
+					default:
 						TgResponse[0] = 0x6F;
 						TgResponse[1] = 0x00;
 						TgResLen = 2;
-					}
-					break;
+						break;
 				}
 				
-				case READ_BINARY:
+				if(!NFC_Picc_Response(DEVICE_ADDRESS, TgResLen, TgResponse, RetData))
 				{
-					unsigned char Le;
-					Le = RetData[6];
-					
-					if (Le == 0x0F) //Read binary data from CC file
-					{
-						//See NFCForum Tech Spec Type 4 Tag 2.0
-						//Page 29 (Appendix C.1, Detection of NDEF Message)
-						//Slight modification in Max NDEF Size (50 -> 1024)
-						unsigned char ResBuff[17] 	= { 0x00,0x0F,0x10,0x00,
-														0x3B,0x00,0x34,0x04,
-														0x06,0xE1,0x04,0x04,
-														0x00,0x00,0x00,0x90,
-														0x00 };
-						memcpy(TgResponse, ResBuff, 17);
-						TgResLen = 17;
-					}
-					else if (Le == 2) //Read NDEF Length
-					{
-						if (mode == READ_MODE)
-						{
-							//0x00E9 = Total NDEF length + 2 byte (for NLEN)
-							unsigned char ResBuff[4]	= {	0x00,0xE9,0x90,0x00 };
-							memcpy(TgResponse, ResBuff, 4);
-							TgResLen = 4;
-						}
-						else
-						{
-							//0x0005 = Total NDEF length + 2 byte (for NLEN)
-							unsigned char ResBuff[4]	= {	0x00,0x05,0x90,0x00 };
-							memcpy(TgResponse, ResBuff, 4);
-							TgResLen = 4;
-						}
-					}
-					else
-					{
-						if (Le)
-						{
-							unsigned char P2;
-							P2 = RetData[5];
-							if (mode == READ_MODE)
-							{
-								memcpy(TgResponse, All_Read_Data+P2, Le);
-							}
-							else
-							{
-								memcpy(TgResponse, All_Write_Data+P2, Le);
-							}
-							
-							unsigned char SW1SW2[2] = {0x90,0x00};
-							memcpy(TgResponse+Le, SW1SW2, 2);
-							TgResLen = Le+2;
-						}
-						else
-						{
-							TgResponse[0] = 0x6F;
-							TgResponse[1] = 0x00;
-							TgResLen = 2;
-						}
-					}
-					break;
+					fprintf(stdout,"NFC Picc Response OK!\n");
+					print_data(TgResponse,TgResLen,"Response");
+					fprintf(stdout,"\n");
 				}
-				
-				case UPDATE_BINARY:
+				else
 				{
-					unsigned char Lc = RetData[6];
-					
-					unsigned char P2 = RetData[5];
-					
-					if(Lc > 2)
-					{
-						RcvdNDEFLen = P2+Lc;
-						for(i=0;i<Lc;i++)RcvdNDEF[i+P2] = RetData[7+i];
-						TgResponse[0] = 0x90;
-						TgResponse[1] = 0x00;
-						TgResLen = 2;
-					}
-					else if(Lc == 2)
-					{
-						dataRawLen = RcvdNDEFLen - 2;
-						memcpy(dataRaw, RcvdNDEF+2, dataRawLen);
-						if(verify_data(dataRaw, SESN, aes_key) == true)
-						{
-							write_complete = true;
-							TgResponse[0] = 0x90;
-							TgResponse[1] = 0x00;
-							TgResLen = 2;
-						}
-						else
-						{
-							TgResponse[0] = 0x6F;
-							TgResponse[1] = 0x00;
-							TgResLen = 2;
-							fprintf(stdout, "\nDATA: WRONG!\n");
-							return 7;
-						}
-					}					
-					break;
+					fprintf(stderr,"NFC Picc Response Fail!\n");
+					force_exit = 3;
 				}
-				
-				default:
-					TgResponse[0] = 0x6F;
-					TgResponse[1] = 0x00;
-					TgResLen = 2;
-					break;
-			}
-			
-			if(!NFC_Picc_Response(DEVICE_ADDRESS, TgResLen, TgResponse, RetData))
-			{
-				fprintf(stdout,"NFC Picc Response OK!\n");
-				print_data(TgResponse,TgResLen,"Response");
-				fprintf(stdout,"\n");
 			}
 			else
 			{
-				fprintf(stderr,"NFC Picc Response Fail!\n");
-				return 3;
+				fprintf(stderr,"NFC Picc Command Fail!\n");
+				PICC_NDEF_detection = true;
 			}
-		}
-		else
-		{
-			fprintf(stderr,"NFC Picc Command Fail!\n");
-			PICC_NDEF_detection = true;
 		}
 	}
 	
-	if (write_complete)
+	switch(force_exit){
+		case 0:
+			break;
+		default:
+			return force_exit;
+	}
+	
+	printf("program exit smoothly\n");
+	
+	if (complete)
 	{
 		fprintf(stdout,"DATA:");
 		print_data(RcvdNDEF+2, RcvdNDEFLen-2, "Result");
 		return 0;
 	}
 	
-	return 4;
+	return 2;
 }
