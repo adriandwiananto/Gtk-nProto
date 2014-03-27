@@ -75,24 +75,24 @@ json_object* create_log_as_json_object()
 				int PT = logDecrypted[3];
 				unsigned int BinID = logDecrypted[4]<<24 | logDecrypted[5]<<16 |  logDecrypted[6]<<8 | logDecrypted[7];
 				
-				uintmax_t ACCN_R, ACCN_S;
-				ACCN_R=0;
-				ACCN_S=0;
+				uintmax_t ACCN_M, ACCN_P;
+				ACCN_M=0;
+				ACCN_P=0;
 				
 				int z=0;
 				for(z=0; z<6; z++)
 				{
 					if(z)
 					{
-						ACCN_R <<= 8;
-						ACCN_S <<= 8;
+						ACCN_M <<= 8;
+						ACCN_P <<= 8;
 					}
-					ACCN_R |= logDecrypted[8+z];
-					ACCN_S |= logDecrypted[14+z];
+					ACCN_M |= logDecrypted[8+z];
+					ACCN_P |= logDecrypted[14+z];
 				}
 				
-				ACCN_R &= 0xFFFFFFFFFFFF;
-				ACCN_S &= 0xFFFFFFFFFFFF;
+				ACCN_M &= 0xFFFFFFFFFFFF;
+				ACCN_P &= 0xFFFFFFFFFFFF;
 				
 				unsigned int AMNT = logDecrypted[20]<<24 | logDecrypted[21]<<16 |  logDecrypted[22]<<8 | logDecrypted[23];
 				unsigned int TS = logDecrypted[24]<<24 | logDecrypted[25]<<16 |  logDecrypted[26]<<8 | logDecrypted[27];
@@ -102,8 +102,8 @@ json_object* create_log_as_json_object()
 				json_object * jint_NUM = json_object_new_int(NUM);
 				json_object * jint_PT = json_object_new_int(PT);
 				json_object * jint_BinaryID = json_object_new_int(BinID);
-				json_object * jint64_ACCN_R = json_object_new_int64(ACCN_R);
-				json_object * jint64_ACCN_S = json_object_new_int64(ACCN_S);
+				json_object * jint64_ACCN_M = json_object_new_int64(ACCN_M);
+				json_object * jint64_ACCN_P = json_object_new_int64(ACCN_P);
 				json_object * jint_AMNT = json_object_new_int(AMNT);
 				json_object * jint_TS = json_object_new_int(TS);
 				json_object * jint_STAT = json_object_new_int(STAT);
@@ -112,8 +112,8 @@ json_object* create_log_as_json_object()
 				json_object_object_add(jobj_log_object,"NUM", jint_NUM);
 				json_object_object_add(jobj_log_object,"PT", jint_PT);
 				json_object_object_add(jobj_log_object,"BinaryID", jint_BinaryID);
-				json_object_object_add(jobj_log_object,"ACCN-R", jint64_ACCN_R);
-				json_object_object_add(jobj_log_object,"ACCN-S", jint64_ACCN_S);
+				json_object_object_add(jobj_log_object,"ACCN-M", jint64_ACCN_M);
+				json_object_object_add(jobj_log_object,"ACCN-P", jint64_ACCN_P);
 				json_object_object_add(jobj_log_object,"AMNT", jint_AMNT);
 				json_object_object_add(jobj_log_object,"TS", jint_TS);
 				json_object_object_add(jobj_log_object,"STAT", jint_STAT);
@@ -156,11 +156,15 @@ json_object* create_log_as_json_object()
 
 	json_object * jstr_signature = json_object_new_string(signature);
 	
+	json_object * jint_balance;
+	jint_balance = json_object_new_int(settlementwindow->settlement_balance);
+	
 	json_object_object_add(jobj_header,"ACCN",jint_ACCN);
 	json_object_object_add(jobj_header,"HWID",jint_HWID);
 	json_object_object_add(jobj_header,"numOfLog",jint_numOfLog);
 	json_object_object_add(jobj_header,"signature",jstr_signature);
 	json_object_object_add(jobj_header,"last_sync_at",jint_last_sync_at);
+	json_object_object_add(jobj_header,"balance",jint_balance);
 
 #ifdef DEBUG_MODE
 	printf("json header: %s\n", json_object_to_json_string(jobj_header));

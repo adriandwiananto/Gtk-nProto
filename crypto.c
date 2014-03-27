@@ -215,15 +215,21 @@ gboolean encrypt_lastTransaction_log(unsigned char* logHexInStr, unsigned int lo
 	logPlain[2] = logNum & 0xFF;
 	logPlain[3] = lastTransactionData.PT;
 	memset(logPlain+4,0,4);
+	//SWAPPED:wrong ACCN position
 	memcpy(logPlain+8,lastTransactionData.ACCNbyte,6);
 	
 	int i=0;
 	for(i=5; i>=0; i--)
 	{
 		if(i<5)ACCN >>= 8;
-		logPlain[14+i] = ACCN & 0xFF;
+		//SWAPPED:wrong ACCN position
+		//~ logPlain[14+i] = ACCN & 0xFF;
+		logPlain[8+i] = ACCN & 0xFF;
 	}
 	
+	//SWAPPED:wrong ACCN position
+	memcpy(logPlain+14,lastTransactionData.ACCNbyte,6);
+
 	memcpy(logPlain+20, lastTransactionData.AMNTbyte,4);
 	memcpy(logPlain+24, lastTransactionData.TSbyte,4);
 	logPlain[28] = 0;	//STAT

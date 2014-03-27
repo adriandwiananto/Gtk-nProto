@@ -257,7 +257,9 @@ unsigned int *lognum, char *timebuffer, uintmax_t *senderACCN, unsigned int*amou
 	{
 		if(z)(*senderACCN) <<= 8;
 		else (*senderACCN) = 0;
-		(*senderACCN) |= logDecrypted[8+z];
+		//SWAPPED:wrong ACCN position
+		//~ (*senderACCN) |= logDecrypted[8+z];
+		(*senderACCN) |= logDecrypted[14+z];
 #ifdef DEBUG_MODE
 		printf("ACCN[%d]:%llx\n", z, (*senderACCN));
 #endif
@@ -265,4 +267,35 @@ unsigned int *lognum, char *timebuffer, uintmax_t *senderACCN, unsigned int*amou
 	(*senderACCN) &= 0xFFFFFFFFFFFF;
 	
 	*lognum = (logDecrypted[0]<<16) | (logDecrypted[1]<<8) | (logDecrypted[2]);
+}
+
+gboolean clear_DB_entry()
+{
+	sqlite3 *db;
+	char *zErrMsg = 0;
+	int  rc;
+	char *sql;
+
+	/* Open database */
+	rc = sqlite3_open("log.db", &db);
+	if( rc )
+	{
+		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+		return FALSE;
+	}
+
+	/* Create SQL statement */
+	sql = 	"DELETE FROM TransLog;";
+
+	/* Execute SQL statement */
+	rc = sqlite3_exec(db, sql, NULL, NULL, &zErrMsg);
+	if( rc != SQLITE_OK )
+	{
+		fprintf(stderr, "SQL error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+		return FALSE;
+	}
+	else fprintf(stdout, "Entries from table cleared\n");
+	sqlite3_close(db);
+	return TRUE;
 }

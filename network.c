@@ -101,14 +101,12 @@ gboolean send_reg_jsonstring_to_server(gchar* aesKeyString, const char* jsonStri
 	return TRUE;
 }
 
-gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonHeader, const char* jsonLogs, const char* serverName)
+gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonHeader, const char* jsonLogs, const char* serverName, int* balance_on_server)
 {
 	const char *headerPost = "header=";
 	const char *logsPost = "&logs=";
 	CURL *curl;
 	CURLcode res;
-
-	enum json_type type = json_type_null;
 
 	char *dataBuffer;
 	int total_len = strlen(jsonHeader)+strlen(jsonLogs)+strlen(headerPost)+strlen(logsPost);
@@ -137,10 +135,6 @@ gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonHead
 
 #ifdef DEBUG_MODE	
 	printf("dataBuffer:%s\n",dataBuffer);
-	
-	//~ int i=0;
-	//~ for(i=0;i<strlen(dataBuffer);i++)printf("dBuff[%d]:%c, ",i,dataBuffer[i]);
-	//~ printf("\n");
 #endif
 
 	/* get a curl handle */ 
@@ -176,50 +170,29 @@ gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonHead
 #endif
 		
 		//~ memcpy(serverResponse, response.ptr, response.len);
-		json_object * jobj_response = json_tokener_parse(response.ptr);
-		jobj_response = json_object_object_get(jobj_response, "key");
-		jobj_response = json_object_object_get(jobj_response, "renew");
+		json_object * jobj_response_root = json_tokener_parse(response.ptr);
+		json_object * jobj_response_result = json_object_object_get(jobj_response_root, "result");
+		if(!strcmp(json_object_get_string(jobj_response_result),"Error"))
+			return FALSE;
+		if(!strcmp(json_object_get_string(jobj_response_result),"error"))
+			return FALSE;
+			
+		json_object * jobj_response_balance = json_object_object_get(jobj_response_root, "balance");
+		*balance_on_server = json_object_get_int(jobj_response_balance);
 		
-		type = json_object_get_type(jobj_response);
-		switch(type)
-		{
-			case json_type_boolean:
-				if(json_object_get_boolean(jobj_response))
-				{
-					jobj_response = json_tokener_parse(response.ptr);
-					jobj_response = json_object_object_get(jobj_response, "key");
-					jobj_response = json_object_object_get(jobj_response, "new_key");
-					memcpy(aesKeyString, json_object_get_string(jobj_response), strlen(json_object_get_string(jobj_response)));
-				}
-				break;
-			case json_type_null:
-				printf("json type: null \n");
-				break;
-			case json_type_double:
-				printf("json type: double \n");
-				break;
-			case json_type_int:
-				printf("json type: int \n");
-				break;
-			case json_type_object:
-				printf("json type: object \n");
-				break;
-			case json_type_array:
-				printf("json type: array \n");
-				break;
-			case json_type_string:
-				printf("json type: string \n");
-				break;
+		json_object * jobj_response_key = json_object_object_get(jobj_response_root, "key");
+		json_object * jobj_response_key_renew = json_object_object_get(jobj_response_key, "renew");
+		if(json_object_get_boolean(jobj_response_key_renew) == TRUE){
+			json_object * jobj_response_key_new_key = json_object_object_get(jobj_response_key, "new_key");
+			memcpy(aesKeyString, json_object_get_string(jobj_response_key_new_key), strlen(json_object_get_string(jobj_response_key_new_key)));
 		}
-
+		write_int64_to_config((uintmax_t)time(NULL), "application.LATS");
+		
 		free(response.ptr);
 		
 		/* always cleanup */ 
 		curl_easy_cleanup(curl);
 	}
 	
-	if(type!=json_type_boolean)
-		return FALSE;
-	else		
-		return TRUE;
+	return TRUE;
 }

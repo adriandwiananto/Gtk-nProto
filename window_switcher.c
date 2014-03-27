@@ -60,8 +60,8 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 		sprintf(balanceToWrite, "Rp %'d", settlementwindow->settlement_balance);
 		gtk_label_set_text((GtkLabel *)settlementwindow->total_label, balanceToWrite);
 		
-		if(settlementwindow->settlement_balance)
-			gtk_widget_set_sensitive(settlementwindow->claim_button, TRUE);
+		//~ if(settlementwindow->settlement_balance)
+			//~ gtk_widget_set_sensitive(settlementwindow->claim_button, TRUE);
 
 		gtk_widget_show(settlementwindow->window);
 	}

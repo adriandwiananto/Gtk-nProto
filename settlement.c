@@ -33,7 +33,7 @@ gboolean init_settlement_window()
 
 	gtk_label_set_text((GtkLabel *)settlementwindow->total_label, settlement_balance);
 
-	gtk_widget_set_sensitive(settlementwindow->claim_button, FALSE);
+	//~ gtk_widget_set_sensitive(settlementwindow->claim_button, FALSE);
 	
 	return TRUE;
 }
@@ -41,8 +41,13 @@ gboolean init_settlement_window()
 /* Callback for Claim button in settlement window */
 void on_settlement_claim_button_clicked()
 {
-	if(send_log_to_server() == TRUE)
+	int balance_on_server;
+	if(send_log_to_server(&balance_on_server) == TRUE)
 	{
+		gchar notif_message[128];
+		memset(notif_message,0,128);
+		
+		sprintf(notif_message, "Settlement Success!\nBalance on server: Rp%'d",balance_on_server);
 		notification_message("Settlement Success!");
 		gtk_widget_hide(settlementwindow->window);
 	}
@@ -62,7 +67,7 @@ void on_settlement_cancel_button_clicked()
 	WindowSwitcher(WindowSwitcherFlag);
 }
 
-static gboolean send_log_to_server()
+static gboolean send_log_to_server(int* balance_on_server)
 {
 	json_object* log_jobj = create_log_as_json_object();
 	json_object* log_jHeader = json_object_object_get(log_jobj, "header");
@@ -74,9 +79,12 @@ static gboolean send_log_to_server()
 	if(send_log_jsonstring_to_server	(aesKeyString, 
 									json_object_to_json_string(log_jHeader), 
 									json_object_to_json_string(log_jLogs),
-									"http://emoney-server.herokuapp.com/sync.json") == FALSE)
+									"http://emoney-server.herokuapp.com/sync.json",
+									balance_on_server) == FALSE)
 		return FALSE;
 	else
 		//DELETE LOG
+		clear_DB_entry();
+		gtk_list_store_clear(historywindow->history_store);
 		return TRUE;
 }

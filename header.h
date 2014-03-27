@@ -201,10 +201,11 @@ int read_log_blob(unsigned char *dest, int row);
 int logNum();
 void convert_DBdata_to_TreeView_Data(unsigned char *DB_BLOB_data, int logLen, unsigned int *lognum, char *timebuffer, uintmax_t *senderACCN, unsigned int*amount);
 gboolean update_encrypted_log(char* logToWriteInStr, int Row);
+gboolean clear_DB_entry();
 
 /*network function*/
 gboolean send_reg_jsonstring_to_server(gchar* aesKeyString, const char* jsonString, const char* serverName);
-gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonHeader, const char* jsonLogs, const char* serverName);
+gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonHeader, const char* jsonLogs, const char* serverName, int* return_balance);
 
 /*json function*/
 json_object* create_registration_json(uintmax_t ACCN, int HWID);
