@@ -86,5 +86,6 @@ static gboolean send_log_to_server(int* balance_on_server)
 		//DELETE LOG
 		clear_DB_entry();
 		gtk_list_store_clear(historywindow->history_store);
+		settlementwindow->settlement_balance = 0;
 		return TRUE;
 }
