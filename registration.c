@@ -18,7 +18,7 @@ static void abort_registration()
 }
 
 //~ static gboolean send_regData_get_aesKey(unsigned char* aesKey, const gchar* ACCN, char* HWID)
-static gboolean send_regData_get_aesKey(unsigned char* aesKey, uintmax_t ACCN, int HWID)
+static gboolean send_regData_get_aesKey(unsigned char* aesKey, unsigned int* retTimestamp, uintmax_t ACCN, int HWID)
 {
 	json_object *jobj = create_registration_json(ACCN,HWID);
 	gchar aesKeyString[65];
@@ -26,7 +26,7 @@ static gboolean send_regData_get_aesKey(unsigned char* aesKey, uintmax_t ACCN, i
 	
 	printf("json object in string: %s\n",json_object_to_json_string(jobj));
 	
-	if(send_reg_jsonstring_to_server	(aesKeyString, 
+	if(send_reg_jsonstring_to_server	(aesKeyString, retTimestamp,
 									json_object_to_json_string(jobj), 
 									"http://emoney-server.herokuapp.com/register.json") == FALSE)
 		return FALSE;
@@ -144,9 +144,10 @@ void on_registration_request_button_clicked()
 
 					unsigned char aes_key[KEY_LEN_BYTE];
 					memset(aes_key,0,KEY_LEN_BYTE);
-
+					unsigned int retTS;
+					
 					//~ if(send_regData_get_aesKey(aes_key, new_ACCN_entry, HWID) == FALSE)
-					if(send_regData_get_aesKey(aes_key, ACCN, HWIDint) == FALSE)
+					if(send_regData_get_aesKey(aes_key, &retTS, ACCN, HWIDint) == FALSE)
 						abort_registration();
 						
 					/*create new config file (with error checking)*/
@@ -225,7 +226,7 @@ void on_registration_request_button_clicked()
 
 					if(createDB_and_table() == FALSE)abort_registration();
 					
-					write_int64_to_config((uintmax_t)time(NULL), "application.LATS");
+					write_int64_to_config((uintmax_t)retTS, "application.LATS");
 
 					notification_message("Registration Success! Restart the application");
 

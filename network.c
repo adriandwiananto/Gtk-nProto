@@ -32,7 +32,7 @@ static size_t curl_response_to_string(void *ptr, size_t size, size_t nmemb, Resp
 	return size*nmemb;
 }
 
-gboolean send_reg_jsonstring_to_server(gchar* aesKeyString, const char* jsonString, const char* serverName)
+gboolean send_reg_jsonstring_to_server(gchar* aesKeyString, unsigned int* retTS, const char* jsonString, const char* serverName)
 {
 	CURL *curl;
 	CURLcode res;
@@ -86,11 +86,20 @@ gboolean send_reg_jsonstring_to_server(gchar* aesKeyString, const char* jsonStri
 		
 		//~ memcpy(serverResponse, response.ptr, response.len);
 		json_object * jobj_response = json_tokener_parse(response.ptr);
+		json_object * jobj_error = json_object_object_get(jobj_response,"error");
+		if(jobj_error != NULL)
+			return FALSE;
 		json_object * response_status = json_object_object_get(jobj_response,"result");
 		if(!strcmp(json_object_get_string(response_status),"Error"))
 			return FALSE;
-		jobj_response = json_object_object_get(jobj_response, "key");
-		memcpy(aesKeyString, json_object_get_string(jobj_response), strlen(json_object_get_string(jobj_response)));
+		if(!strcmp(json_object_get_string(response_status),"error"))
+			return FALSE;
+			
+		json_object* json_key = json_object_object_get(jobj_response, "key");
+		memcpy(aesKeyString, json_object_get_string(json_key), strlen(json_object_get_string(json_key)));
+
+		json_object* json_TS = json_object_object_get(jobj_response, "last_sync_at");
+		*retTS = json_object_get_int(json_TS);
 
 		free(response.ptr);
 		

@@ -1,6 +1,7 @@
 #include "header.h"
 
 static gboolean parse_transaction_frame(unsigned char *payload);
+gboolean finishProcessLastTrans = FALSE;
 
 /*
 We call init_newtrans_window() when our program is starting to load 
@@ -180,7 +181,8 @@ static gboolean parse_transaction_frame(unsigned char *payload)
 		/* DO NOT USE IV VALUE AGAIN! 
 		 * AFTER DECRYPT USING OpenSSL, IV VALUE CHANGED!! 
 		 */
-		 
+		//~ memset(&lastTransactionData,0,sizeof(lastTransactionData));
+
 		lastTransactionData.PT = PT;
 		memcpy(&lastTransactionData.ACCNbyte, decryptedPayload, 6);
 		memcpy(&lastTransactionData.AMNTbyte, decryptedPayload+10, 4);
@@ -264,6 +266,9 @@ static void cb_child_watch( GPid pid, gint status, GString *data )
 	{
 		if(!WEXITSTATUS(status))
 		{
+			while(finishProcessLastTrans == FALSE){
+			}
+			
 			gchar successMsg[255];
 			sprintf(successMsg,
 					"Transaction Success!\nAmount: Rp. %'lu\nFrom: %ju\n",
@@ -343,7 +348,14 @@ static gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond, GString *d
 			//~ fprintf(stdout,"%s",data->str);
 			
 			memcpy(detect_str,data->str,5);
-			if(!strcmp(detect_str,"DATA:"))parse_nfc_data(data);
+			if(!strcmp(detect_str,"DATA:"))
+			{
+				parse_nfc_data(data);
+				//~ if(write_lastTransaction_log() == FALSE)
+					//~ error_message("fail to write to log");
+					
+				finishProcessLastTrans = TRUE;
+			}
 			
 			break;
 	

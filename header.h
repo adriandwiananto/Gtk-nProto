@@ -204,7 +204,7 @@ gboolean update_encrypted_log(char* logToWriteInStr, int Row);
 gboolean clear_DB_entry();
 
 /*network function*/
-gboolean send_reg_jsonstring_to_server(gchar* aesKeyString, const char* jsonString, const char* serverName);
+gboolean send_reg_jsonstring_to_server(gchar* aesKeyString, unsigned int* retTS, const char* jsonString, const char* serverName);
 gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonHeader, const char* jsonLogs, const char* serverName, int* return_balance);
 
 /*json function*/
