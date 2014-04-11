@@ -8,6 +8,11 @@ Function for switching active window
 */
 void WindowSwitcher(Bitwise WindowSwitcherFlag)
 {
+	if(config_checking() != 1)
+	{
+		gtk_main_quit();
+	}
+		
 	/*password window switcher*/
 	(f_password_window == TRUE)?gtk_widget_show(passwordwindow->window):gtk_widget_hide(passwordwindow->window);
 	
@@ -23,14 +28,17 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 	/*new trans window switcher*/
 	if(f_newtrans_window == TRUE)
 	{
+		memset(&lastTransactionData,0,sizeof(lastTransactionData));
+		
 		gchar SESN_text[4];
 		int randomnumber;
 		randomnumber = random_number_generator(100,999);
 		snprintf(SESN_text,  4, "%d", randomnumber);
 		gtk_label_set_text((GtkLabel *)newtranswindow->SESN_label, SESN_text);
 		
-		memset(&lastTransactionData,0,sizeof(lastTransactionData));
-		
+		lastTransactionData.SESNint = randomnumber;
+		lastTransactionData.SESNbyte[0] = (randomnumber>>8) & 0xFF;
+		lastTransactionData.SESNbyte[1] = randomnumber & 0xFF;
 		gtk_widget_show(newtranswindow->window);
 		
 		//NFC polling goes in here
@@ -68,5 +76,27 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 	else
 	{
 		gtk_widget_hide(settlementwindow->window);	
+	}
+
+	/*send receipt window switcher*/
+	if(f_receipt_window == TRUE)
+	{
+		gchar successMsg[255];
+		sprintf(successMsg,
+				"Transaction Success!\nAmount: Rp. %'lu\nFrom: %ju\n",
+				lastTransactionData.AMNTlong,
+				lastTransactionData.ACCNlong);
+				
+		gtk_label_set_text((GtkLabel *)receiptwindow->label, successMsg);
+		
+		gchar receipt_ndef[111];
+		build_receipt_packet(receipt_ndef);
+		
+		spawn_nfc_receipt_process(receipt_ndef);
+		gtk_widget_show(receiptwindow->window);
+	}
+	else
+	{
+		gtk_widget_hide(receiptwindow->window);	
 	}
 }

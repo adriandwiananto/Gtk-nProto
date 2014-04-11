@@ -1,7 +1,7 @@
 #include "header.h"
 
 static gboolean parse_transaction_frame(unsigned char *payload);
-gboolean finishProcessLastTrans = FALSE;
+//~ gboolean finishProcessLastTrans = FALSE;
 
 /*
 We call init_newtrans_window() when our program is starting to load 
@@ -181,12 +181,11 @@ static gboolean parse_transaction_frame(unsigned char *payload)
 		/* DO NOT USE IV VALUE AGAIN! 
 		 * AFTER DECRYPT USING OpenSSL, IV VALUE CHANGED!! 
 		 */
-		//~ memset(&lastTransactionData,0,sizeof(lastTransactionData));
-
 		lastTransactionData.PT = PT;
 		memcpy(&lastTransactionData.ACCNbyte, decryptedPayload, 6);
-		memcpy(&lastTransactionData.AMNTbyte, decryptedPayload+10, 4);
 		memcpy(&lastTransactionData.TSbyte, decryptedPayload+6, 4);
+		memcpy(&lastTransactionData.AMNTbyte, decryptedPayload+10, 4);
+		memcpy(&lastTransactionData.LATSbyte, decryptedPayload+14, 4);
 		
 		lastTransactionData.ACCNlong = 0;
 		int i=0;
@@ -210,6 +209,9 @@ static gboolean parse_transaction_frame(unsigned char *payload)
 		
 		lastTransactionData.TSlong =	(lastTransactionData.TSbyte[0]<<24) |	(lastTransactionData.TSbyte[1]<<16) | 
 										(lastTransactionData.TSbyte[2]<<8) | lastTransactionData.TSbyte[3];
+						
+		lastTransactionData.LATSlong =	(lastTransactionData.LATSbyte[0]<<24) |	(lastTransactionData.LATSbyte[1]<<16) | 
+										(lastTransactionData.LATSbyte[2]<<8) | lastTransactionData.LATSbyte[3];
 						
 #ifdef DEBUG_MODE
 		unsigned char FL = *payload;
@@ -240,10 +242,11 @@ static gboolean parse_transaction_frame(unsigned char *payload)
 		for(z=0;z<6;z++)printf("%02X ", lastTransactionData.ACCNbyte[z]);
 		printf("\n");
 		
-		printf(	"\nACCN: %ju | AMNT: %lu | TS: %lu\n", 
+		printf(	"\nACCN: %ju | AMNT: %lu | TS: %lu | LATS: %lu\n", 
 				lastTransactionData.ACCNlong, 
 				lastTransactionData.AMNTlong, 
-				lastTransactionData.TSlong);
+				lastTransactionData.TSlong,
+				lastTransactionData.LATSlong);
 #endif
 
 		return TRUE;
@@ -264,29 +267,31 @@ static void cb_child_watch( GPid pid, gint status, GString *data )
 
 	if (WIFEXITED(status))
 	{
-		if(!WEXITSTATUS(status))
-		{
-			while(finishProcessLastTrans == FALSE){
-			}
-			
-			gchar successMsg[255];
-			sprintf(successMsg,
-					"Transaction Success!\nAmount: Rp. %'lu\nFrom: %ju\n",
-					lastTransactionData.AMNTlong,
-					lastTransactionData.ACCNlong);
+		//~ if(!WEXITSTATUS(status))
+		//~ {
+			//~ if(finishProcessLastTrans == FALSE)
+				//~ error_message("fail to write to log");
+			//~ gchar successMsg[255];
+			//~ sprintf(successMsg,
+					//~ "Transaction Success!\nAmount: Rp. %'lu\nFrom: %ju\n",
+					//~ lastTransactionData.AMNTlong,
+					//~ lastTransactionData.ACCNlong);
 					
-			if(write_lastTransaction_log() == FALSE)
-				error_message("fail to write to log");
-			else
-			{
-				parse_log_file_and_write_to_treeview(logNum(), logNum());
-				notification_message(successMsg);
-			}
-		}
-		else
-		{
+			//~ if(write_lastTransaction_log() == FALSE)
+				//~ error_message("fail to write to log");
+			//~ else
+			//~ {
+				//~ //CREATE PDF HERE!!!
+				//~ parse_log_file_and_write_to_treeview(logNum(), logNum());
+				//~ notification_message(successMsg);
+			//~ }
+		//~ }
+		//~ else
+		//~ {
 			switch(WEXITSTATUS(status))
 			{
+				case 0:
+					break;
 				case 1:
 					error_message("Reader error! Reconnect reader!");
 					break;
@@ -311,7 +316,7 @@ static void cb_child_watch( GPid pid, gint status, GString *data )
 					error_message("Transaction failed! error:99");
 					break;
 			}
-		}
+		//~ }
 	}
 	
 	/* Close pid */
@@ -351,10 +356,21 @@ static gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond, GString *d
 			if(!strcmp(detect_str,"DATA:"))
 			{
 				parse_nfc_data(data);
-				//~ if(write_lastTransaction_log() == FALSE)
-					//~ error_message("fail to write to log");
 					
-				finishProcessLastTrans = TRUE;
+				//~ finishProcessLastTrans = TRUE;
+				
+				if(write_lastTransaction_log() == TRUE)
+				{
+					//CREATE PDF HERE!!!
+					parse_log_file_and_write_to_treeview(logNum(), logNum());
+					
+					/*open receipt window and main menu*/
+					Bitwise WindowSwitcherFlag;
+					f_status_window = FALSE;
+					f_mainmenu_window = TRUE;
+					f_receipt_window = TRUE;
+					WindowSwitcher(WindowSwitcherFlag);
+				}
 			}
 			
 			break;

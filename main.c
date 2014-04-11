@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
 	settlementwindow = g_slice_new(SettlementWindow);
 	optionwindow = g_slice_new(OptionWindow);
 	registrationwindow = g_slice_new(RegistrationWindow);
+	receiptwindow = g_slice_new(ReceiptWindow);
 	
 	/* check config integrity */
 	config_status = config_checking();
@@ -29,6 +30,7 @@ int main(int argc, char *argv[])
 	gtk_init(&argc,&argv);
 
 	/* create all gtk window */
+	if(init_receipt_window() == FALSE) return 1;
 	if(init_registration_window() == FALSE) return 1;
 	if(init_option_window() == FALSE) return 1;
 	if(init_settlement_window() == FALSE) return 1;
@@ -42,6 +44,7 @@ int main(int argc, char *argv[])
 	{
 		case -1:
 			error_message("unauthorized config file modification is detected!!");
+			return -1;
 			break;
 		case 1:
 			f_status_window = FALSE;	//hide all window
@@ -67,6 +70,7 @@ int main(int argc, char *argv[])
 	g_slice_free(SettlementWindow, settlementwindow);
 	g_slice_free(OptionWindow, optionwindow);
 	g_slice_free(RegistrationWindow, registrationwindow);
+	g_slice_free(ReceiptWindow, receiptwindow);
 	
 	return 0;
 }

@@ -37,6 +37,7 @@
 #define f_settlement_window		WindowSwitcherFlag.bit4
 #define f_option_window		 	WindowSwitcherFlag.bit5
 #define f_registration_window	WindowSwitcherFlag.bit6
+#define f_receipt_window		WindowSwitcherFlag.bit7
 #define f_status_window 		WindowSwitcherFlag.status
 
 
@@ -68,6 +69,9 @@ typedef struct
 {
 	unsigned char PT;
 
+	unsigned char SESNbyte[2];
+	unsigned int SESNint;
+	
 	unsigned char ACCNbyte[6];
 	unsigned long long ACCNlong;
 
@@ -76,6 +80,9 @@ typedef struct
 
 	unsigned char TSbyte[4];
 	unsigned long TSlong;
+	
+	unsigned char LATSbyte[4];
+	unsigned long LATSlong;
 }transactionData;
 	
 typedef union
@@ -141,6 +148,12 @@ typedef struct
 	GtkWidget *new_entry;
 	GtkWidget *confirm_entry;
 }RegistrationWindow;
+	
+typedef struct
+{
+	GtkWidget *window;
+	GtkWidget *label;
+}ReceiptWindow;
 
 /*callback function*/
 void on_pwd_ok_button_clicked ();
@@ -169,6 +182,7 @@ gboolean init_history_window();
 gboolean init_settlement_window();
 gboolean init_option_window();
 gboolean init_registration_window();
+gboolean init_receipt_window();
 
 /*libconfig function*/
 int config_checking();
@@ -189,9 +203,12 @@ void getTransKey(unsigned char* aes_key, const gchar* password, const gchar* ACC
 gboolean decrypt_transaction_frame(unsigned char* output, unsigned char* input, unsigned char* IV);
 gboolean getLogKey(unsigned char* logKey);
 void json_log_array_hashing(char *hashed, const char *json_array);
+int calc_sha256_of_file (char* path, char output[65]);
+gboolean build_receipt_packet(gchar* receipt_ndef_str);
 
 /*spawn function*/
 void nfc_poll_child_process(gchar *SESN);
+void spawn_nfc_receipt_process(gchar* receipt_ndef);
 
 /*log function*/
 gboolean createDB_and_table();
@@ -236,10 +253,12 @@ EXTERN HistoryWindow *historywindow;
 EXTERN SettlementWindow *settlementwindow;
 EXTERN OptionWindow *optionwindow;
 EXTERN RegistrationWindow *registrationwindow;
+EXTERN ReceiptWindow *receiptwindow;
 
 /*global variable*/
 EXTERN int pass_attempt;
 EXTERN GPid nfc_poll_pid;
+EXTERN GPid nfc_receipt_pid;
 EXTERN char nfc_data[128];
 EXTERN transactionData lastTransactionData;
 EXTERN CryptoKey cryptoKey;
