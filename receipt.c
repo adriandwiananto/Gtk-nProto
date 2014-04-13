@@ -1,4 +1,9 @@
 #include "header.h"
+#include <setjmp.h>
+#include <hpdf.h>
+#include <sys/stat.h>
+
+jmp_buf env;
 
 static void rcp_child_watch( GPid pid, gint status, GString *data );
 static gboolean rcp_err_watch( GIOChannel *channel, GIOCondition cond, GString *data );
@@ -284,4 +289,148 @@ gboolean build_receipt_packet(gchar* receipt_ndef_str)
 	printf("receipt ndef in str: %s\n", receipt_ndef_str);
 	
 	return TRUE;
+}
+
+static void error_handler (HPDF_STATUS   error_no,
+       HPDF_STATUS   detail_no,
+       void         *user_data)
+{
+	printf ("ERROR: error_no=%04X, detail_no=%u\n", (HPDF_UINT)error_no,
+		(HPDF_UINT)detail_no);
+	longjmp(env, 1);
+}
+
+static gboolean create_receipt_write_toPdf (char* filename, char* timestamp_inString, char* accnM_inString, char* accnP_inString, int amount_inInt)
+{
+	HPDF_Doc  pdf;
+	pdf = HPDF_New (error_handler, NULL);
+
+	if (!pdf) {
+		fprintf (stderr, "error: cannot create PdfDoc object\n");
+		return FALSE;
+	}
+
+	if (setjmp(env)) {
+		HPDF_Free (pdf);
+		return FALSE;
+	}
+
+	HPDF_Font bold_font;
+	HPDF_Font normal_font;
+	bold_font = HPDF_GetFont (pdf, "Times-Bold", NULL);
+	normal_font = HPDF_GetFont (pdf, "Times-Roman", NULL);
+
+	/* Add a new page object. */
+	HPDF_Page page;
+	page = HPDF_AddPage (pdf);
+
+	HPDF_REAL height;
+	HPDF_REAL width;
+	height = 210;
+	width = 298;
+	
+	HPDF_Page_SetWidth(page, width);
+	HPDF_Page_SetHeight(page, height);
+
+	/* add image to page */
+	HPDF_Image image;
+	image = HPDF_LoadPngImageFromFile(pdf, "ITB_logo.png");
+	HPDF_Page_DrawImage (page, image, 71, 145, 40, 40);
+
+	/* Print the title */
+	HPDF_Page_SetFontAndSize (page, bold_font, 30);
+	HPDF_Page_BeginText (page);
+	HPDF_Page_TextOut (page, 120, 158, "e-Money");
+	HPDF_Page_EndText (page);
+
+	char merchant[64];
+	char payer[64];
+	memset(merchant, 0, 64);
+	memset(payer, 0, 64);
+	
+	strcpy(merchant, "Merchant: ");
+	strcat(merchant, accnM_inString);
+	strcpy(payer, "Payer: ");
+	strcat(payer, accnP_inString);
+	
+	/* print date and ID */
+	HPDF_Page_BeginText (page);
+	HPDF_Page_SetFontAndSize (page, normal_font, 12);
+	HPDF_Page_TextOut (page, 20, 116, timestamp_inString);
+	HPDF_Page_TextOut (page, 20, 99, merchant);
+	HPDF_Page_TextOut (page, 20, 82, payer);
+	HPDF_Page_EndText (page);
+
+	/* print amount */
+	char amount[64];
+	memset(amount, 0, 64);
+	sprintf(amount, "Rp%'d", amount_inInt);
+
+	HPDF_Page_BeginText(page);
+	HPDF_Page_SetFontAndSize (page, bold_font, 36);
+	HPDF_REAL amount_width = HPDF_Page_TextWidth (page, amount);
+	HPDF_Page_TextOut (page, width-amount_width-23, 34, amount);
+
+	struct stat st;
+    char* receipt_dir = "eMoney/";
+    if (stat(receipt_dir, &st) != 0)
+    {
+        printf("Making log directory\n");
+        mkdir(receipt_dir, S_IRWXU | S_IRWXG);
+    }
+
+	char final_path[256];
+	memset(final_path, 0, 256);
+	strcpy(final_path, receipt_dir);
+	strcat(final_path, filename);    
+	
+	/* save to file */
+	HPDF_SaveToFile (pdf, final_path);
+
+	printf("receipt created! %s\n",final_path);
+
+	/* clean up */
+	HPDF_Free (pdf);
+
+	return 0;
+}
+
+gboolean create_receipt_from_lastTransactionData()
+{
+	uintmax_t ACCN;
+	gchar accnM_inString[32];
+	memset(accnM_inString, 0, 32);
+	
+	if(get_INT64_from_config(&ACCN, "application.ACCN") == FALSE)
+	{
+		error_message("error get ACCN from config");
+		return FALSE;
+	}
+	
+	/*convert ACCN from INT64 to string*/
+	sprintf(accnM_inString, "%ju", ACCN);
+	
+	gchar accnP_inString[32];
+	memset(accnP_inString, 0, 32);
+	sprintf(accnP_inString, "%ju", lastTransactionData.ACCNlong);
+	
+	gchar timestamp_inString[64];
+	memset(timestamp_inString, 0, 64);
+	
+	time_t rawtime = (unsigned int)lastTransactionData.TSlong;
+	struct tm *timeinfo;
+	timeinfo = localtime(&rawtime);
+	strftime (timestamp_inString,64,"%d/%m/%Y %H:%M:%S",timeinfo);
+	
+	gchar timestamp_for_filename[64];
+	memset(timestamp_for_filename, 0, 64);
+	strftime (timestamp_for_filename,64,"%m%d%Y%H%M%S",timeinfo);
+	
+	char filename[240];
+	memset(filename, 0, 240);
+	strcpy(filename, "receipt-");
+	strcat(filename, timestamp_for_filename);
+	strcat(filename, ".pdf");
+	
+	return create_receipt_write_toPdf(filename, timestamp_inString, accnM_inString, accnP_inString, (int)lastTransactionData.AMNTlong);
 }

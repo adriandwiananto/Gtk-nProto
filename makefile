@@ -10,7 +10,7 @@ CXX_EXECUTABLE_2=picc_emulation_write
 all: $(C_EXECUTABLE) $(CXX_EXECUTABLE_1) $(CXX_EXECUTABLE_2)
 
 $(C_EXECUTABLE): $(C_SOURCES)
-	$(CC) $(CFLAGS) -o $(C_EXECUTABLE) $(C_SOURCES) `pkg-config gtk+-3.0 libglade-2.0 --cflags --libs` `pkg-config --cflags --libs libconfig` -lssl -lcrypto -lsqlite3 -ljson -lcurl
+	$(CC) $(CFLAGS) -o $(C_EXECUTABLE) $(C_SOURCES) `pkg-config gtk+-3.0 libglade-2.0 --cflags --libs` `pkg-config --cflags --libs libconfig` -lssl -lcrypto -lsqlite3 -ljson -lcurl -lhpdf
 
 $(CXX_EXECUTABLE_1): $(CXX_SOURCES_1)
 	$(CXX) $(CXX_FLAGS) -o $(CXX_EXECUTABLE_1) $(CXX_SOURCES_1) `pkg-config --cflags --libs libconfig` -lssl -lcrypto -lCVAPIV01_DESFire

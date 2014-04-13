@@ -238,6 +238,7 @@ int random_number_generator(int min_number, int max_number);
 void parse_log_file_and_write_to_treeview(int startRow, int endRow);
 void hexstrToBinArr(unsigned char* dest, gchar* source, gsize destlength);
 gboolean get_USB_reader_HWID (char* hwid);
+gboolean create_receipt_from_lastTransactionData();
 
 #ifndef DECLARE_VARIABLES
 #define EXTERN /* nothing */

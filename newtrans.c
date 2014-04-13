@@ -362,6 +362,7 @@ static gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond, GString *d
 				if(write_lastTransaction_log() == TRUE)
 				{
 					//CREATE PDF HERE!!!
+					create_receipt_from_lastTransactionData();
 					parse_log_file_and_write_to_treeview(logNum(), logNum());
 					
 					/*open receipt window and main menu*/

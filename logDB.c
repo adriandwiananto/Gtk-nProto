@@ -236,7 +236,7 @@ unsigned int *lognum, char *timebuffer, uintmax_t *senderACCN, unsigned int*amou
 	time_t rawtime = TS;
 	struct tm *timeinfo;
 	timeinfo = localtime(&rawtime);
-	strftime (timebuffer,80,"%d/%m/%Y %H:%M",timeinfo);
+	strftime (timebuffer,80,"%d/%m/%Y %H:%M:%S",timeinfo);
 
 #ifdef DEBUG_MODE
 	printf("log key:\n");
