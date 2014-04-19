@@ -16,12 +16,14 @@ int main(int argc, char *argv[])
 	/* allocate memory to global struct */
 	passwordwindow = g_slice_new(PasswordWindow);
 	mainmenuwindow = g_slice_new(MainMenuWindow);
-	newtranswindow = g_slice_new(NewTransWindow);
+	newtransNFCwindow = g_slice_new(NewTransNFCWindow);
 	historywindow = g_slice_new(HistoryWindow);
 	settlementwindow = g_slice_new(SettlementWindow);
 	optionwindow = g_slice_new(OptionWindow);
 	registrationwindow = g_slice_new(RegistrationWindow);
-	receiptwindow = g_slice_new(ReceiptWindow);
+	receiptNFCwindow = g_slice_new(ReceiptWindow);
+	newtranschooserwindow = g_slice_new(NewTransChooserWindow);
+	newtransQRwindow = g_slice_new(NewTransQRWindow);
 	
 	/* check config integrity */
 	config_status = config_checking();
@@ -30,6 +32,8 @@ int main(int argc, char *argv[])
 	gtk_init(&argc,&argv);
 
 	/* create all gtk window */
+	if(init_newtrans_qr_window() == FALSE) return 1;
+	if(init_newtrans_chooser_window() == FALSE) return 1;
 	if(init_receipt_window() == FALSE) return 1;
 	if(init_registration_window() == FALSE) return 1;
 	if(init_option_window() == FALSE) return 1;
@@ -65,12 +69,14 @@ int main(int argc, char *argv[])
 	/* free memory for global struct */
 	g_slice_free(PasswordWindow, passwordwindow);
 	g_slice_free(MainMenuWindow, mainmenuwindow);
-	g_slice_free(NewTransWindow, newtranswindow);
+	g_slice_free(NewTransNFCWindow, newtransNFCwindow);
 	g_slice_free(HistoryWindow, historywindow);
 	g_slice_free(SettlementWindow, settlementwindow);
 	g_slice_free(OptionWindow, optionwindow);
 	g_slice_free(RegistrationWindow, registrationwindow);
-	g_slice_free(ReceiptWindow, receiptwindow);
+	g_slice_free(ReceiptWindow, receiptNFCwindow);
+	g_slice_free(NewTransChooserWindow, newtranschooserwindow);
+	g_slice_free(NewTransQRWindow, newtransQRwindow);
 	
 	return 0;
 }

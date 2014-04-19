@@ -30,15 +30,17 @@
 #define AES_MODE (256)
 #define KEY_LEN_BYTE AES_MODE/8 
 
-#define f_password_window		WindowSwitcherFlag.bit0
-#define f_mainmenu_window		WindowSwitcherFlag.bit1
-#define f_newtrans_window		WindowSwitcherFlag.bit2
-#define f_history_window		WindowSwitcherFlag.bit3
-#define f_settlement_window		WindowSwitcherFlag.bit4
-#define f_option_window		 	WindowSwitcherFlag.bit5
-#define f_registration_window	WindowSwitcherFlag.bit6
-#define f_receipt_window		WindowSwitcherFlag.bit7
-#define f_status_window 		WindowSwitcherFlag.status
+#define f_password_window			WindowSwitcherFlag.bit0
+#define f_mainmenu_window			WindowSwitcherFlag.bit1
+#define f_newtrans_nfc_window		WindowSwitcherFlag.bit2
+#define f_history_window			WindowSwitcherFlag.bit3
+#define f_settlement_window			WindowSwitcherFlag.bit4
+#define f_option_window		 		WindowSwitcherFlag.bit5
+#define f_registration_window		WindowSwitcherFlag.bit6
+#define f_receipt_nfc_window		WindowSwitcherFlag.bit7
+#define f_newtranschooser_window	WindowSwitcherFlag.bit8
+#define f_newtrans_qr_window	WindowSwitcherFlag.bit9
+#define f_status_window 			WindowSwitcherFlag.status
 
 
 typedef struct
@@ -97,8 +99,16 @@ typedef union
 		unsigned char bit5:1;
 		unsigned char bit6:1;
 		unsigned char bit7:1;
+		unsigned char bit8:1;
+		unsigned char bit9:1;
+		unsigned char bit10:1;
+		unsigned char bit11:1;
+		unsigned char bit12:1;
+		unsigned char bit13:1;
+		unsigned char bit14:1;
+		unsigned char bit15:1;
 	};
-	unsigned char status;
+	unsigned short status;
 }Bitwise;
 
 typedef struct
@@ -116,7 +126,7 @@ typedef struct
 {
 	GtkWidget *window;
 	GtkWidget *SESN_label;
-}NewTransWindow;
+}NewTransNFCWindow;
 
 typedef struct
 {
@@ -155,6 +165,17 @@ typedef struct
 	GtkWidget *label;
 }ReceiptWindow;
 
+typedef struct
+{
+	GtkWidget *window;
+}NewTransChooserWindow;
+
+typedef struct
+{
+	GtkWidget *window;
+	GtkWidget *image;
+}NewTransQRWindow;
+
 /*callback function*/
 void on_pwd_ok_button_clicked ();
 void on_pwd_cancel_button_clicked ();
@@ -173,6 +194,9 @@ void on_option_ok_button_clicked();
 void on_option_cancel_button_clicked();
 void on_new_trans_destroy_delete_event ();
 void on_new_trans_cancel_button_clicked ();
+void on_new_trans_chooser_nfc_button_clicked();
+void on_new_trans_chooser_qr_button_clicked();
+void on_newtrans_qr_cancel_button_clicked();
 
 /*window init function*/
 gboolean init_pwd_window();
@@ -183,6 +207,8 @@ gboolean init_settlement_window();
 gboolean init_option_window();
 gboolean init_registration_window();
 gboolean init_receipt_window();
+gboolean init_newtrans_chooser_window();
+gboolean init_newtrans_qr_window();
 
 /*libconfig function*/
 int config_checking();
@@ -249,12 +275,14 @@ gboolean create_receipt_from_lastTransactionData();
 /*global window variable*/
 EXTERN PasswordWindow *passwordwindow;
 EXTERN MainMenuWindow *mainmenuwindow;
-EXTERN NewTransWindow *newtranswindow;
+EXTERN NewTransNFCWindow *newtransNFCwindow;
 EXTERN HistoryWindow *historywindow;
 EXTERN SettlementWindow *settlementwindow;
 EXTERN OptionWindow *optionwindow;
 EXTERN RegistrationWindow *registrationwindow;
-EXTERN ReceiptWindow *receiptwindow;
+EXTERN ReceiptWindow *receiptNFCwindow;
+EXTERN NewTransChooserWindow *newtranschooserwindow;
+EXTERN NewTransQRWindow *newtransQRwindow;
 
 /*global variable*/
 EXTERN int pass_attempt;

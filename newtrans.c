@@ -22,10 +22,10 @@ gboolean init_newtrans_window()
 	}
 
 	/* get the widgets which will be referenced in callbacks */
-	newtranswindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "new_trans_window"));
-	newtranswindow->SESN_label = GTK_WIDGET (gtk_builder_get_object (builder, "new_trans_SESN_label"));
+	newtransNFCwindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "new_trans_nfc_window"));
+	newtransNFCwindow->SESN_label = GTK_WIDGET (gtk_builder_get_object (builder, "new_trans_nfc_SESN_label"));
 
-	gtk_builder_connect_signals (builder, newtranswindow);
+	gtk_builder_connect_signals (builder, newtransNFCwindow);
 	g_object_unref(G_OBJECT(builder));
 	
 	return TRUE;
@@ -50,15 +50,15 @@ static void kill_nfc_poll_process()
 }
 
 /* callback for destroy and delete-event new trans window */
-void on_new_trans_destroy_delete_event ()
+void on_new_trans_nfc_destroy_delete_event ()
 {
 	/*check child process availability, if exists kill it*/
 	kill_nfc_poll_process();
-	gtk_widget_hide(newtranswindow->window);
+	gtk_widget_hide(newtransNFCwindow->window);
 }
 
 /* callback for Cancel button in new trans window */
-void on_new_trans_cancel_button_clicked ()
+void on_new_trans_nfc_cancel_button_clicked ()
 {
 	/*check child process availability, if exists kill it*/
 	kill_nfc_poll_process();
@@ -263,66 +263,46 @@ static void cb_child_watch( GPid pid, gint status, GString *data )
 {
 	data = g_string_new(NULL);
 	
-	gtk_widget_hide(newtranswindow->window);
+	//~ gtk_widget_hide(newtransNFCwindow->window);
 
 	if (WIFEXITED(status))
 	{
-		//~ if(!WEXITSTATUS(status))
-		//~ {
-			//~ if(finishProcessLastTrans == FALSE)
-				//~ error_message("fail to write to log");
-			//~ gchar successMsg[255];
-			//~ sprintf(successMsg,
-					//~ "Transaction Success!\nAmount: Rp. %'lu\nFrom: %ju\n",
-					//~ lastTransactionData.AMNTlong,
-					//~ lastTransactionData.ACCNlong);
-					
-			//~ if(write_lastTransaction_log() == FALSE)
-				//~ error_message("fail to write to log");
-			//~ else
-			//~ {
-				//~ //CREATE PDF HERE!!!
-				//~ parse_log_file_and_write_to_treeview(logNum(), logNum());
-				//~ notification_message(successMsg);
-			//~ }
-		//~ }
-		//~ else
-		//~ {
-			switch(WEXITSTATUS(status))
-			{
-				case 0:
-					break;
-				case 1:
-					error_message("Reader error! Reconnect reader!");
-					break;
-				case 2:
-					break;
-				case 3:
-					error_message("Transaction failed! Retry tapping your phone again. (error:3)");
-					break;
-				case 4:
-					error_message("Transaction failed! Retry tapping your phone again. (error:4)");
-					break;
-				case 5:
-					error_message("Reader initialization FATAL error!");
-					break;
-				case 6:
-					error_message("Wrong SESN input!");
-					break;
-				case 7:
-					error_message("FATAL error on customer's side!! Wrong transaction key!");
-					break;
-				default:
-					error_message("Transaction failed! error:99");
-					break;
-			}
-		//~ }
+		switch(WEXITSTATUS(status))
+		{
+			case 0:
+				break;
+			case 1:
+				error_message("Reader error! Reconnect reader!");
+				break;
+			case 2:
+				break;
+			case 3:
+				error_message("Transaction failed! Retry tapping your phone again. (error:3)");
+				break;
+			case 4:
+				error_message("Transaction failed! Retry tapping your phone again. (error:4)");
+				break;
+			case 5:
+				error_message("Reader initialization FATAL error!");
+				break;
+			case 6:
+				error_message("Wrong SESN input!");
+				break;
+			case 7:
+				error_message("FATAL error on customer's side!! Wrong transaction key!");
+				break;
+			default:
+				error_message("Transaction failed! error:99");
+				break;
+		}
 	}
 	
 	/* Close pid */
     g_spawn_close_pid( pid );
     
     g_string_free(data,TRUE);
+    
+    on_new_trans_nfc_cancel_button_clicked();
 }
 
 /* io out watch callback */
@@ -369,7 +349,7 @@ static gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond, GString *d
 					Bitwise WindowSwitcherFlag;
 					f_status_window = FALSE;
 					f_mainmenu_window = TRUE;
-					f_receipt_window = TRUE;
+					f_receipt_nfc_window = TRUE;
 					WindowSwitcher(WindowSwitcherFlag);
 				}
 			}

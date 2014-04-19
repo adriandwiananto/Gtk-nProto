@@ -29,8 +29,8 @@ gboolean init_receipt_window()
 	}
 
 	/* get the widgets which will be referenced in callbacks */
-	receiptwindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "receipt_window"));
-	receiptwindow->label = GTK_WIDGET (gtk_builder_get_object (builder, "receipt_receipt_label"));
+	receiptNFCwindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "receipt_nfc_window"));
+	receiptNFCwindow->label = GTK_WIDGET (gtk_builder_get_object (builder, "receipt_nfc_receipt_label"));
 
 	gtk_builder_connect_signals (builder, passwordwindow);
 	g_object_unref(G_OBJECT(builder));
@@ -39,7 +39,7 @@ gboolean init_receipt_window()
 }
 
 /* callback for OK button in password prompt window */
-void on_receipt_finish_button_clicked ()
+void on_receipt_nfc_finish_button_clicked ()
 {
 	/*check child process availability, if exists kill it*/
 	kill_nfc_receipt_process();
@@ -113,7 +113,7 @@ static void rcp_child_watch( GPid pid, gint status, GString *data )
 {
 	data = g_string_new(NULL);
 	
-	gtk_widget_hide(newtranswindow->window);
+	//~ gtk_widget_hide(receiptNFCwindow->window);
 
 	if (WIFEXITED(status))
 	{
@@ -151,6 +151,8 @@ static void rcp_child_watch( GPid pid, gint status, GString *data )
     g_spawn_close_pid( pid );
     
     g_string_free(data,TRUE);
+    
+    on_receipt_nfc_finish_button_clicked();
 }
 
 /* io out watch callback */

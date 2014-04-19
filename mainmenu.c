@@ -40,7 +40,7 @@ void on_mm_new_trans_button_clicked ()
 		Bitwise WindowSwitcherFlag;
 		f_status_window = FALSE;
 		f_mainmenu_window = TRUE;
-		f_newtrans_window = TRUE;
+		f_newtranschooser_window = TRUE;
 		WindowSwitcher(WindowSwitcherFlag);
 	}
 	else
