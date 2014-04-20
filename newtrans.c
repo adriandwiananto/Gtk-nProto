@@ -310,8 +310,8 @@ static gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond, GString *d
 {
 	GIOStatus status;
 	
-	gchar detect_str[5];
-	memset(detect_str,0,5);
+	gchar detect_str[8];
+	memset(detect_str,0,8);
 	
 	data = g_string_new(NULL);
 

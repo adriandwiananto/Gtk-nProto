@@ -235,6 +235,7 @@ gboolean build_receipt_packet(gchar* receipt_ndef_str);
 /*spawn function*/
 void nfc_poll_child_process(gchar *SESN);
 void spawn_nfc_receipt_process(gchar* receipt_ndef);
+void qr_zbar_child_process();
 
 /*log function*/
 gboolean createDB_and_table();
@@ -288,6 +289,7 @@ EXTERN NewTransQRWindow *newtransQRwindow;
 EXTERN int pass_attempt;
 EXTERN GPid nfc_poll_pid;
 EXTERN GPid nfc_receipt_pid;
+EXTERN GPid qr_zbar_pid;
 EXTERN char nfc_data[128];
 EXTERN transactionData lastTransactionData;
 EXTERN CryptoKey cryptoKey;

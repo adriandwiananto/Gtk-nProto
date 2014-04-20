@@ -157,6 +157,7 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 		gtk_widget_show(newtransQRwindow->window);
 		
 		//start zbarcam child process
+		qr_zbar_child_process();
 	}
 	else
 	{
