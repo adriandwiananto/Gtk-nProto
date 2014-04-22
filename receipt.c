@@ -38,7 +38,7 @@ gboolean init_receipt_window()
 	return TRUE;
 }
 
-/* callback for OK button in password prompt window */
+/* callback for Finish button in receipt window */
 void on_receipt_nfc_finish_button_clicked ()
 {
 	/*check child process availability, if exists kill it*/
@@ -51,6 +51,14 @@ void on_receipt_nfc_finish_button_clicked ()
 	WindowSwitcher(WindowSwitcherFlag);
 }
 
+//~ /* callback for Send button in receipt window */
+//~ void on_receipt_nfc_send_button_clicked ()
+//~ {
+	//~ gchar receipt_ndef[111];
+	//~ build_receipt_packet(receipt_ndef);
+	//~ spawn_nfc_receipt_process(receipt_ndef);
+//~ }
+
 static void kill_nfc_receipt_process()
 {
 	/*check child process availability, if exists kill it*/
@@ -58,15 +66,15 @@ static void kill_nfc_receipt_process()
 	{
 		if(kill(nfc_receipt_pid, SIGTERM) >= 0)
 		{
-			printf("process killed with SIGTERM\n");
+			printf("nfc receipt process killed with SIGTERM\n");
 		}
 		else
 		{
 			kill(nfc_receipt_pid, SIGKILL);
-			printf("process killed with SIGKILL\n");
+			printf("nfc receipt process killed with SIGKILL\n");
 		}
 	}
-	else printf("child process does not exists\n");
+	else printf("nfc receipt child process does not exists\n");
 }
 
 /* create child process for sending receipt (call other program) */
@@ -231,11 +239,11 @@ gboolean build_receipt_packet(gchar* receipt_ndef_str)
 {
 	int i=0;
 	unsigned char receipt_ndef_array[55];
+	
 	uintmax_t ACCN;
-	if(get_INT64_from_config(&ACCN, "application.ACCN") == FALSE) return FALSE;
 	gchar ACCNstr[32];
-	memset(ACCNstr, 0, 32);
-	sprintf(ACCNstr, "%ju", ACCN);
+	ACCN = get_ACCN(ACCNstr);
+	if(!strcmp(ACCNstr,"error!"))return FALSE;
 
 	receipt_ndef_array[0] = 55; // length 55
 	receipt_ndef_array[1] = 1; //offline
@@ -276,10 +284,8 @@ gboolean build_receipt_packet(gchar* receipt_ndef_str)
 	RAND_bytes(IV, 16);
 	memcpy(receipt_ndef_array+39,IV,16);
 
-	AES_KEY enc_key;
-	AES_set_encrypt_key(aes_key, 256, &enc_key);
-	AES_cbc_encrypt(receiptPayloadPlain, receiptPayloadEncrypted, 32, &enc_key, IV, AES_ENCRYPT);
-
+	aes256cbc(receiptPayloadEncrypted, receiptPayloadPlain, aes_key, IV, "ENCRYPT");
+	
 	memcpy(receipt_ndef_array+7,receiptPayloadEncrypted,32);
 
 	buf_ptr = receipt_ndef_str;
@@ -401,14 +407,9 @@ gboolean create_receipt_from_lastTransactionData()
 {
 	uintmax_t ACCN;
 	gchar accnM_inString[32];
-	memset(accnM_inString, 0, 32);
-	
-	if(get_INT64_from_config(&ACCN, "application.ACCN") == FALSE)
-	{
-		error_message("error get ACCN from config");
-		return FALSE;
-	}
-	
+	ACCN = get_ACCN(accnM_inString);
+	if(!strcmp(accnM_inString,"error!"))return FALSE;
+		
 	/*convert ACCN from INT64 to string*/
 	sprintf(accnM_inString, "%ju", ACCN);
 	

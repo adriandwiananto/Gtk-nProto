@@ -67,9 +67,7 @@ json_object* create_log_as_json_object()
 				unsigned char logDecrypted[32];
 				memset(logDecrypted,0,32);
 				
-				AES_KEY dec_key;
-				AES_set_decrypt_key(LogKey, 256, &dec_key);
-				AES_cbc_encrypt(fromDBbyte, logDecrypted, 32, &dec_key, IV, AES_DECRYPT);
+				aes256cbc(logDecrypted, fromDBbyte, LogKey, IV, "DECRYPT");
 				
 				unsigned int NUM = logDecrypted[0]<<16 |  logDecrypted[1]<<8 | logDecrypted[2];
 				int PT = logDecrypted[3];
@@ -155,16 +153,29 @@ json_object* create_log_as_json_object()
 	printf("signature:%s\n",signature);
 
 	json_object * jstr_signature = json_object_new_string(signature);
-	
+	printf("signature:%s\n",json_object_to_json_string(jstr_signature));
+
 	json_object * jint_balance;
 	jint_balance = json_object_new_int(settlementwindow->settlement_balance);
+	printf("balance:%s\n",json_object_to_json_string(jint_balance));
 	
 	json_object_object_add(jobj_header,"ACCN",jint_ACCN);
+	printf("json object header:%s\n",json_object_to_json_string(jobj_header));
+
 	json_object_object_add(jobj_header,"HWID",jint_HWID);
+	printf("json object header:%s\n",json_object_to_json_string(jobj_header));
+
 	json_object_object_add(jobj_header,"numOfLog",jint_numOfLog);
+	printf("json object header:%s\n",json_object_to_json_string(jobj_header));
+
 	json_object_object_add(jobj_header,"signature",jstr_signature);
+	printf("json object header:%s\n",json_object_to_json_string(jobj_header));
+
 	json_object_object_add(jobj_header,"last_sync_at",jint_last_sync_at);
+	printf("json object header:%s\n",json_object_to_json_string(jobj_header));
+
 	json_object_object_add(jobj_header,"balance",jint_balance);
+	printf("json object header:%s\n",json_object_to_json_string(jobj_header));
 
 #ifdef DEBUG_MODE
 	printf("json header: %s\n", json_object_to_json_string(jobj_header));

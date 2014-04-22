@@ -38,15 +38,15 @@ static void kill_nfc_poll_process()
 	{
 		if(kill(nfc_poll_pid, SIGTERM) >= 0)
 		{
-			printf("process killed with SIGTERM\n");
+			printf("nfc poll process killed with SIGTERM\n");
 		}
 		else
 		{
 			kill(nfc_poll_pid, SIGKILL);
-			printf("process killed with SIGKILL\n");
+			printf("nfc poll process killed with SIGKILL\n");
 		}
 	}
-	else printf("child process does not exists\n");
+	else printf("nfc poll child process does not exists\n");
 }
 
 /* callback for destroy and delete-event new trans window */
@@ -86,7 +86,6 @@ void hexstrToBinArr(unsigned char* dest, gchar* source, gsize destlength)
 /* parse nfc data from child process */
 static void parse_nfc_data(GString *nfcdata)
 {
-	int i=0;
 	gsize data_len;
 	/* subtract 5 from prefix "DATA:"
 	 * subtract 1 from postfix newline
@@ -101,12 +100,7 @@ static void parse_nfc_data(GString *nfcdata)
 	unsigned char ReceivedData[data_len/2];
 	hexstrToBinArr(ReceivedData, data_only, data_len/2);
 
-	printf("Received Data:\n");
-	for (i=0;i<data_len/2;i++) 
-	{
-		printf("%02X ", ReceivedData[i]);
-	}
-	printf("\n");
+	print_array_inHex("Received Data:", ReceivedData, data_len/2);
 	
 	//TODO:
 	//remove ndef header, take only emoney frame
@@ -218,30 +212,15 @@ static gboolean parse_transaction_frame(unsigned char *payload)
 		unsigned char FF = *(payload+2);
 		unsigned int SESNheader = (payload[3]<<8) | payload[4];
 
-		int z=0;
 		printf("\nFL: %02X\n",FL);
 		printf("PT: %02X\n",lastTransactionData.PT);
 		printf("FF: %02X\n",FF);
 		printf("SESN in header: %d\n",SESNheader);
 
-		printf("decrypted payload: \n");
-		for(z=0;z<32;z++)
-		{
-			printf("%02X ", decryptedPayload[z]);
-		}
-		printf("\n");
+		print_array_inHex("decrypted payload:", decryptedPayload, 32);
+		print_array_inHex("IV:", payload+39, 16);
+		print_array_inHex("ACCN byte:", lastTransactionData.ACCNbyte, 6);
 
-		printf("IV: \n");
-		for(z=0;z<16;z++)
-		{
-			printf("%02X ", *(payload+(39+z)));
-		}
-		printf("\n");
-
-		printf("ACCN byte: ");
-		for(z=0;z<6;z++)printf("%02X ", lastTransactionData.ACCNbyte[z]);
-		printf("\n");
-		
 		printf(	"\nACCN: %ju | AMNT: %lu | TS: %lu | LATS: %lu\n", 
 				lastTransactionData.ACCNlong, 
 				lastTransactionData.AMNTlong, 

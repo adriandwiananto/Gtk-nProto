@@ -87,10 +87,9 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 		
 		unsigned char ACCN_array[6];
 		uintmax_t ACCN;
-		get_INT64_from_config(&ACCN, "application.ACCN");
 		gchar ACCNstr[32];
-		memset(ACCNstr, 0, 32);
-		sprintf(ACCNstr, "%ju", ACCN);
+		ACCN = get_ACCN(ACCNstr);
+		
 		for(i=5; i>=0; i--)
 		{
 			if(i<5)ACCN >>= 8;
@@ -132,9 +131,7 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 		RAND_bytes(IV, 16);
 		memcpy(merchant_request_packet+39,IV,16);
 
-		AES_KEY enc_key;
-		AES_set_encrypt_key(aes_key, 256, &enc_key);
-		AES_cbc_encrypt(merchantrequestPayloadPlain, merchantrequestPayloadEncrypted, 32, &enc_key, IV, AES_ENCRYPT);
+		aes256cbc(merchantrequestPayloadEncrypted, merchantrequestPayloadPlain, aes_key, IV, "ENCRYPT");
 
 		memcpy(merchant_request_packet+7,merchantrequestPayloadEncrypted,32);
 

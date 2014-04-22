@@ -17,7 +17,6 @@ static void abort_registration()
 	exit(1);
 }
 
-//~ static gboolean send_regData_get_aesKey(unsigned char* aesKey, const gchar* ACCN, char* HWID)
 static gboolean send_regData_get_aesKey(unsigned char* aesKey, unsigned int* retTimestamp, uintmax_t ACCN, int HWID)
 {
 	json_object *jobj = create_registration_json(ACCN,HWID);
@@ -28,7 +27,7 @@ static gboolean send_regData_get_aesKey(unsigned char* aesKey, unsigned int* ret
 	
 	if(send_reg_jsonstring_to_server	(aesKeyString, retTimestamp,
 									json_object_to_json_string(jobj), 
-									"http://emoney-server.herokuapp.com/register.json") == FALSE)
+									"https://emoney-server.herokuapp.com/register.json") == FALSE)
 		return FALSE;
 	
 	hexstrToBinArr(aesKey, aesKeyString, 32);
@@ -36,13 +35,7 @@ static gboolean send_regData_get_aesKey(unsigned char* aesKey, unsigned int* ret
 #ifdef DEBUG_MODE
 	printf("aeskey in string: %s\n", aesKeyString);
 
-	int i;
-	printf("aes key array from json response:\n");
-	for(i=0;i<32;i++)
-	{
-		printf("%02X ", aesKey[i]);
-	}
-	printf("\n");
+	print_array_inHex("aes key array from json response:",aesKey, 32);
 #endif
 
 	return TRUE;
@@ -146,7 +139,6 @@ void on_registration_request_button_clicked()
 					memset(aes_key,0,KEY_LEN_BYTE);
 					unsigned int retTS;
 					
-					//~ if(send_regData_get_aesKey(aes_key, new_ACCN_entry, HWID) == FALSE)
 					if(send_regData_get_aesKey(aes_key, &retTS, ACCN, HWIDint) == FALSE)
 						abort_registration();
 						
@@ -156,12 +148,8 @@ void on_registration_request_button_clicked()
 						error_message("Error creating config file");
 						abort_registration();
 					}
-
 #ifdef DEBUG_MODE					
-					printf("aes key: ");
-					int i=0;
-					for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",aes_key[i]);
-					printf("\n\n");
+					else print_array_inHex("aes key:", aes_key, KEY_LEN_BYTE);
 #endif
 
 					unsigned char KeyEncryptionKey[KEY_LEN_BYTE];
@@ -174,13 +162,7 @@ void on_registration_request_button_clicked()
 						abort_registration();
 					}
 #ifdef DEBUG_MODE
-					else
-					{
-						printf("derived key: ");
-						int i=0;
-						for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",KeyEncryptionKey[i]);
-						printf("\n\n");
-					}
+					else print_array_inHex("derived key:", KeyEncryptionKey, KEY_LEN_BYTE);
 #endif
 
 					/* wrap key using KEK */
@@ -190,13 +172,7 @@ void on_registration_request_button_clicked()
 						abort_registration();
 					}
 #ifdef DEBUG_MODE
-					else
-					{
-						printf("wrapped key: ");
-						int i=0;
-						for(i=0;i<KEY_LEN_BYTE+8;i++)printf("%.02X ",wrapped_key[i]);
-						printf("\n\n");
-					}
+					else print_array_inHex("wrapped key:",wrapped_key, KEY_LEN_BYTE);
 #endif
 
 					/* convert wrapped key to base 64 and write to config */
@@ -208,20 +184,12 @@ void on_registration_request_button_clicked()
 					get_string_from_config(wrapped_base64,"security.transaction");
 					unsigned char *wrapped_unbase64 = (unsigned char *) unbase64((unsigned char *)wrapped_base64, strlen(wrapped_base64)+1);
 
-					printf("wrapped unbase64 key: ");
-					for(i=0;i<KEY_LEN_BYTE+8;i++)printf("%.02X ",*(wrapped_unbase64+i));
-					printf("\n\n");
+					print_array_inHex("wrapped unbase64 key:", wrapped_unbase64, KEY_LEN_BYTE+8);
 					
 					/* unwrap key using KEK */
 					if(unwrap_aes_key(aes_key, KeyEncryptionKey, (unsigned char *)wrapped_unbase64) == FALSE)
 						error_message("error unwrapping key");
-					else
-					{
-						printf("wrapped key: ");
-						int i=0;
-						for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",aes_key[i]);
-						printf("\n\n");
-					}
+					else print_array_inHex("wrapped key:", aes_key, KEY_LEN_BYTE);
 #endif
 
 					if(createDB_and_table() == FALSE)abort_registration();

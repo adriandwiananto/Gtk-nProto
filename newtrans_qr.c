@@ -7,15 +7,15 @@ static void kill_qr_zbar_process()
 	{
 		if(kill(qr_zbar_pid, SIGTERM) >= 0)
 		{
-			printf("process killed with SIGTERM\n");
+			printf("qr zbarcam process killed with SIGTERM\n");
 		}
 		else
 		{
 			kill(qr_zbar_pid, SIGKILL);
-			printf("process killed with SIGKILL\n");
+			printf("qr zbarcam process killed with SIGKILL\n");
 		}
 	}
-	else printf("child process does not exists\n");
+	else printf("qr zbarcam child process does not exists\n");
 }
 
 /*

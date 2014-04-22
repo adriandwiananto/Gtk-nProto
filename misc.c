@@ -26,3 +26,11 @@ int random_number_generator(int min_number, int max_number)
 	
 	return myRandomInteger;
 }
+
+void print_array_inHex(const char* caption, unsigned char* array, int size)
+{
+	int i = 0;
+	printf("%s\n",caption);
+	for(i = 0; i<size; i++) printf("%02X ", array[i]);
+	printf("\n");
+}

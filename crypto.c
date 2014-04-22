@@ -128,7 +128,6 @@ void getTransKey(unsigned char* aes_key, const gchar* password, const gchar* ACC
 	
 	//~ unsigned char aes_key[KEY_LEN_BYTE];
 	unsigned char KeyEncryptionKey[KEY_LEN_BYTE];
-	int i=0;
 	
 	/* derive key from password + ACCN */
 	if(derive_key(KeyEncryptionKey, password, ACCN, 10000) == FALSE)
@@ -139,9 +138,7 @@ void getTransKey(unsigned char* aes_key, const gchar* password, const gchar* ACC
 	{
 		if (printResult)
 		{
-			printf("derived key: ");
-			for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",KeyEncryptionKey[i]);
-			printf("\n\n");
+			print_array_inHex("derived key:",KeyEncryptionKey,KEY_LEN_BYTE);
 		}
 	}
 	
@@ -154,12 +151,10 @@ void getTransKey(unsigned char* aes_key, const gchar* password, const gchar* ACC
 
 	if (printResult)
 	{
-		printf("wrapped unbase64 key: ");
-		for(i=0;i<KEY_LEN_BYTE+8;i++)printf("%.02X ",*(wrapped_unbase64+i));
-		printf("\n\n");
+		print_array_inHex("wrapped unbase64 key:",wrapped_unbase64,KEY_LEN_BYTE+8);
 	}
 	
-		/* unwrap key using KEK */
+	/* unwrap key using KEK */
 	if(unwrap_aes_key(aes_key, KeyEncryptionKey, (unsigned char *)wrapped_unbase64) == FALSE)
 	{
 		error_message("error unwrapping key");
@@ -168,10 +163,7 @@ void getTransKey(unsigned char* aes_key, const gchar* password, const gchar* ACC
 	{
 		if (printResult)
 		{
-			printf("wrapped key: ");
-			int i=0;
-			for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",aes_key[i]);
-			printf("\n\n");
+			print_array_inHex("wrapped key:",aes_key, KEY_LEN_BYTE);
 		}
 	}
 }
@@ -183,25 +175,17 @@ gboolean decrypt_transaction_frame(unsigned char* output, unsigned char* input, 
 	 */
 
 	const gchar *passwordStr;
-	uintmax_t ACCN;
-	gchar ACCNstr[32];
-	memset(ACCNstr, 0, 32);
-
 	passwordStr = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
-
-	if(get_INT64_from_config(&ACCN, "application.ACCN") == TRUE)
-		sprintf(ACCNstr, "%ju", ACCN);
-	else 
-		return FALSE;
+	
+	gchar ACCNstr[32];
+	get_ACCN(ACCNstr);
 	
 	unsigned char aes_key[32];
 	memset(aes_key,0,32);
 	
 	getTransKey(aes_key, passwordStr, ACCNstr, FALSE);
-	
-	AES_KEY dec_key;
-	AES_set_decrypt_key(aes_key, 256, &dec_key);
-	AES_cbc_encrypt(input, output, 32, &dec_key, IV, AES_DECRYPT);
+
+	aes256cbc(output, input, aes_key, IV, "DECRYPT");
 	
 	return TRUE;
 }
@@ -217,21 +201,15 @@ gboolean encrypt_lastTransaction_log(unsigned char* logHexInStr, unsigned int lo
 	logPlain[2] = logNum & 0xFF;
 	logPlain[3] = lastTransactionData.PT;
 	memset(logPlain+4,0,4);
-	//SWAPPED:wrong ACCN position
-	//~ memcpy(logPlain+8,lastTransactionData.ACCNbyte,6);
 	
 	int i=0;
 	for(i=5; i>=0; i--)
 	{
 		if(i<5)ACCN >>= 8;
-		//SWAPPED:wrong ACCN position
-		//~ logPlain[14+i] = ACCN & 0xFF;
 		logPlain[8+i] = ACCN & 0xFF;
 	}
 	
-	//SWAPPED:wrong ACCN position
 	memcpy(logPlain+14,lastTransactionData.ACCNbyte,6);
-
 	memcpy(logPlain+20, lastTransactionData.AMNTbyte,4);
 	memcpy(logPlain+24, lastTransactionData.TSbyte,4);
 	logPlain[28] = 0;	//STAT
@@ -273,53 +251,33 @@ gboolean encrypt_lastTransaction_log(unsigned char* logHexInStr, unsigned int lo
 		memcpy(logToWrite+32,IV,16);
 
 #ifdef DEBUG_MODE		
-		printf("IV:\n");
-		for(i=0;i<16;i++)printf("%02X ", IV[i]);
-		printf("\n");
-		printf("log key:\n");
-		for(i=0;i<32;i++)printf("%02X ", logKey[i]);
-		printf("\n");
-		printf("logPlain:\n");
-		for(i=0;i<32;i++)printf("%02X ", logPlain[i]);
-		printf("\n");
+		print_array_inHex("IV:",IV,16);
+		print_array_inHex("log key:",logKey,32);
+		print_array_inHex("logPlain:",logPlain,32);
 #endif
 
-		AES_KEY enc_key;
-		AES_set_encrypt_key(logKey, 256, &enc_key);
-		AES_cbc_encrypt(logPlain, logEncrypted, 32, &enc_key, IV, AES_ENCRYPT);
-
+		aes256cbc(logEncrypted, logPlain, logKey, IV, "ENCRYPT");
+		
 #ifdef DEBUG_MODE		
-		printf("log encrypted:\n");
-		for(i=0;i<32;i++)printf("%02X ", logEncrypted[i]);
-		printf("\n");
+		print_array_inHex("log encrypted", logEncrypted, 32);
 		
 		unsigned char logDecrypted[32];
 		memset(logDecrypted,0,32);
 		
 		memcpy(IV, logToWrite+32, 16);
-		printf("IV:\n");
-		for(i=0;i<16;i++)printf("%02X ", IV[i]);
-		printf("\n");
-		printf("log key:\n");
-		for(i=0;i<32;i++)printf("%02X ", logKey[i]);
-		printf("\n");
+		print_array_inHex("IV:",IV,16);
+		print_array_inHex("log key:",logKey,32);
 		
-		AES_KEY dec_key;
-		AES_set_decrypt_key(logKey, 256, &dec_key);
-		AES_cbc_encrypt(logEncrypted, logDecrypted, 32, &dec_key, IV, AES_DECRYPT);
+		aes256cbc(logDecrypted, logEncrypted, logKey, IV, "DECRYPT");
 
-		printf("log decrypted:\n");
-		for(i=0;i<32;i++)printf("%02X ", logDecrypted[i]);
-		printf("\n");
+		print_array_inHex("log decrypted",logDecrypted,32);
 #endif
 		
 		memcpy(logToWrite,logEncrypted,32);
 	}
 
 #ifdef DEBUG_MODE	
-	printf("log to write (encrypted+iv):\n");
-	for(i=0;i<48;i++)printf("%02X ", logToWrite[i]);
-	printf("\n");
+	print_array_inHex("log to write (encrypted+iv):",logToWrite,48);
 #endif
 
 	buf_ptr = logHexInStr;
@@ -335,15 +293,12 @@ gboolean encrypt_lastTransaction_log(unsigned char* logHexInStr, unsigned int lo
 
 gboolean getLogKey(unsigned char* logKey)
 {
-	uintmax_t ACCN;
-	get_INT64_from_config(&ACCN, "application.ACCN");
+	gchar ACCNstr[32];
+	get_ACCN(ACCNstr);
+	
 	const gchar *password;
 	password = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
 
-	gchar ACCNstr[32];
-	memset(ACCNstr, 0, 32);
-	sprintf(ACCNstr, "%ju", ACCN);
-	
 	if(derive_key(logKey, password, ACCNstr, 9000)==FALSE)
 	{
 		fprintf(stderr,"error deriving key\n");
@@ -387,4 +342,23 @@ static void sha256_hash_string (unsigned char hash[SHA256_DIGEST_LENGTH], char o
     }
 
     outputBuffer[64] = 0;
+}
+
+void aes256cbc(unsigned char* output, unsigned char* input, unsigned char* key, unsigned char* IV, const char* mode)
+{
+	unsigned char IV_duplicate[16];
+	memset(IV_duplicate,0,16);
+	memcpy(IV_duplicate, IV, 16);
+	
+	AES_KEY aes_key;
+	if(!strcmp(mode,"ENCRYPT"))
+	{
+		AES_set_encrypt_key(key, 256, &aes_key);
+		AES_cbc_encrypt(input, output, 32, &aes_key, IV_duplicate, AES_ENCRYPT);
+	}
+	else if(!strcmp(mode, "DECRYPT"))
+	{
+		AES_set_decrypt_key(key, 256, &aes_key);
+		AES_cbc_encrypt(input, output, 32, &aes_key, IV_duplicate, AES_DECRYPT);
+	}
 }

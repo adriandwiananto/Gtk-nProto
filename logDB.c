@@ -219,18 +219,11 @@ unsigned int *lognum, char *timebuffer, uintmax_t *senderACCN, unsigned int*amou
 #ifdef DEBUG_MODE
 	printf("from DB: %s, length: %d\n",DB_BLOB_data,logLen);
 
-	printf("byte array:\n");
-	for(z=0;z<logLen/2;z++)printf("%02X ",fromDBbyte[z]);
-	printf("\n");
-
-	printf("IV:\n");
-	for(z=0;z<16;z++)printf("%02X ", IV[z]);
-	printf("\n");
+	print_array_inHex("byte array:",fromDBbyte,logLen/2);
+	print_array_inHex("IV:",IV, 16);
 #endif
 
-	AES_KEY dec_key;
-	AES_set_decrypt_key(logKey, 256, &dec_key);
-	AES_cbc_encrypt(fromDBbyte, logDecrypted, 32, &dec_key, IV, AES_DECRYPT);
+	aes256cbc(logDecrypted, fromDBbyte, logKey, IV, "DECRYPT");
 
 	unsigned int TS = (logDecrypted[24]<<24) | (logDecrypted[25]<<16) | (logDecrypted[26]<<8) | (logDecrypted[27]);
 	time_t rawtime = TS;
@@ -239,14 +232,8 @@ unsigned int *lognum, char *timebuffer, uintmax_t *senderACCN, unsigned int*amou
 	strftime (timebuffer,80,"%d/%m/%Y %H:%M:%S",timeinfo);
 
 #ifdef DEBUG_MODE
-	printf("log key:\n");
-	for(z=0;z<32;z++)printf("%02X ", logKey[z]);
-	printf("\n");
-
-	printf("log decrypted:\n");
-	for(z=0;z<32;z++)printf("%02X ", logDecrypted[z]);
-	printf("\n");
-
+	print_array_inHex("log key:",logKey,32);
+	print_array_inHex("log decrypted:",logDecrypted,32);
 	printf ("timestamp:%s\n",timebuffer);
 #endif
 	

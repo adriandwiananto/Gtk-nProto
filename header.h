@@ -217,6 +217,7 @@ gboolean get_INT64_from_config(uintmax_t *value, const char *path);
 gboolean get_string_from_config(char *value, const char *path);
 gboolean write_string_to_config(char *value, const char *path);
 gboolean write_int64_to_config(uintmax_t value, const char *path);
+uintmax_t get_ACCN(gchar* ACCN_inString);
 
 /*crypto function*/
 void passwordhashing(char *hashed, const gchar *password, const gchar *salt);
@@ -231,6 +232,7 @@ gboolean getLogKey(unsigned char* logKey);
 void json_log_array_hashing(char *hashed, const char *json_array);
 int calc_sha256_of_file (char* path, char output[65]);
 gboolean build_receipt_packet(gchar* receipt_ndef_str);
+void aes256cbc(unsigned char* output, unsigned char* input, unsigned char* key, unsigned char* IV, const char* mode);
 
 /*spawn function*/
 void nfc_poll_child_process(gchar *SESN);
@@ -266,6 +268,7 @@ void parse_log_file_and_write_to_treeview(int startRow, int endRow);
 void hexstrToBinArr(unsigned char* dest, gchar* source, gsize destlength);
 gboolean get_USB_reader_HWID (char* hwid);
 gboolean create_receipt_from_lastTransactionData();
+void print_array_inHex(const char* caption, unsigned char* array, int size);
 
 #ifndef DECLARE_VARIABLES
 #define EXTERN /* nothing */

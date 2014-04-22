@@ -87,18 +87,11 @@ static gboolean change_password_and_all_encryption(const gchar* old_pwd_entry, c
 {
 	int i=0;
 	char hashed[(SHA256_DIGEST_LENGTH*2)+1];
-	uintmax_t ACCN;
+	
+	//~ uintmax_t ACCN;
 	gchar ACCNstr[32];
-	memset(ACCNstr, 0, 32);
-	
-	if(get_INT64_from_config(&ACCN, "application.ACCN") == FALSE)
-	{
-		error_message("error get ACCN from config");
-		return FALSE;
-	}
-	
-	/*convert ACCN from INT64 to string*/
-	sprintf(ACCNstr, "%ju", ACCN);
+	//~ ACCN = get_ACCN(ACCNstr);
+	get_ACCN(ACCNstr);
 	
 	/*=================*/
 	/*hash new password*/
@@ -122,9 +115,7 @@ static gboolean change_password_and_all_encryption(const gchar* old_pwd_entry, c
 		return FALSE;
 	}
 #ifdef DEBUG_MODE
-	printf("derived key: ");
-	for(i=0;i<KEY_LEN_BYTE;i++)printf("%.02X ",KeyEncryptionKey[i]);
-	printf("\n\n");
+	print_array_inHex("derived key:", KeyEncryptionKey, KEY_LEN_BYTE);
 #endif
 
 	/* wrap key using KEK */
@@ -134,9 +125,7 @@ static gboolean change_password_and_all_encryption(const gchar* old_pwd_entry, c
 		return FALSE;
 	}
 #ifdef DEBUG_MODE
-	printf("wrapped key: ");
-	for(i=0;i<KEY_LEN_BYTE+8;i++)printf("%.02X ",wrapped_key[i]);
-	printf("\n\n");
+	print_array_inHex("wrapped key:", wrapped_key, KEY_LEN_BYTE+8);
 #endif
 
 	/*====================*/
@@ -184,9 +173,7 @@ static gboolean change_password_and_all_encryption(const gchar* old_pwd_entry, c
 				memset(IV,0,16);
 				memcpy(IV, fromDBbyte+32, 16);	
 				
-				AES_KEY dec_key;
-				AES_set_decrypt_key(oldLogKey, 256, &dec_key);
-				AES_cbc_encrypt(fromDBbyte, logDecrypted, 32, &dec_key, IV, AES_DECRYPT);
+				aes256cbc(logDecrypted, fromDBbyte, oldLogKey, IV, "DECRYPT");
 				
 				unsigned char logEncrypted[32];
 				memset(logEncrypted,0,32);
@@ -195,19 +182,12 @@ static gboolean change_password_and_all_encryption(const gchar* old_pwd_entry, c
 				RAND_bytes(newIV, 16);
 				memcpy((logToWrite[i-1])+32,newIV,16);
 
-				AES_KEY enc_key;
-				AES_set_encrypt_key(newLogKey, 256, &enc_key);
-				AES_cbc_encrypt(logDecrypted, logEncrypted, 32, &enc_key, newIV, AES_ENCRYPT);
+				aes256cbc(logEncrypted, logDecrypted, newLogKey, newIV, "ENCRYPT");
 				
 				memcpy(logToWrite[i-1],logEncrypted,32);
 #ifdef DEBUG_MODE
-				int z=0;
-				printf("old log:\n");
-				for(z=0;z<48;z++)printf("%02X ", fromDBbyte[z]);
-				printf("\n");
-				printf("new log:\n");
-				for(z=0;z<48;z++)printf("%02X ", logToWrite[i-1][z]);
-				printf("\n");
+				print_array_inHex("old log:", fromDBbyte, 48);
+				print_array_inHex("new log:", logToWrite[i-1], 48);
 #endif
 			}
 			else return FALSE;

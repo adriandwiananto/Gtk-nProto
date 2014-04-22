@@ -79,7 +79,7 @@ static gboolean send_log_to_server(int* balance_on_server)
 	if(send_log_jsonstring_to_server	(aesKeyString, 
 									json_object_to_json_string(log_jHeader), 
 									json_object_to_json_string(log_jLogs),
-									"http://emoney-server.herokuapp.com/sync.json",
+									"https://emoney-server.herokuapp.com/sync.json",
 									balance_on_server) == FALSE)
 		return FALSE;
 	else

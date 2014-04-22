@@ -334,3 +334,26 @@ static int cp(const char *to, const char *from)
     errno = saved_errno;
     return -1;
 }
+
+/*function for getting ACCN value from config file*/
+/*ACCN_inString size must be 32*/
+uintmax_t get_ACCN(gchar* ACCN_inString)
+{
+	uintmax_t ACCN = 0;
+	memset(ACCN_inString, 0, 32);
+	
+	if(get_INT64_from_config(&ACCN, "application.ACCN") == TRUE)
+	{
+		sprintf(ACCN_inString, "%ju", ACCN);
+#ifdef DEBUG_MODE
+		printf("ACCN get_ACCN: %ju\n",ACCN);
+		printf("ACCNstr get_ACCN: %s\n",ACCN_inString);
+#endif
+	}
+	else
+	{
+		strcpy(ACCN_inString,"error!");
+	}
+	
+	return ACCN;
+}
