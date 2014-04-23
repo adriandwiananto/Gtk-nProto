@@ -32,7 +32,7 @@ gboolean init_receipt_window()
 	receiptNFCwindow->window = GTK_WIDGET (gtk_builder_get_object (builder, "receipt_nfc_window"));
 	receiptNFCwindow->label = GTK_WIDGET (gtk_builder_get_object (builder, "receipt_nfc_receipt_label"));
 
-	gtk_builder_connect_signals (builder, passwordwindow);
+	gtk_builder_connect_signals (builder, receiptNFCwindow);
 	g_object_unref(G_OBJECT(builder));
 	
 	return TRUE;
@@ -51,13 +51,14 @@ void on_receipt_nfc_finish_button_clicked ()
 	WindowSwitcher(WindowSwitcherFlag);
 }
 
-//~ /* callback for Send button in receipt window */
-//~ void on_receipt_nfc_send_button_clicked ()
-//~ {
-	//~ gchar receipt_ndef[111];
-	//~ build_receipt_packet(receipt_ndef);
-	//~ spawn_nfc_receipt_process(receipt_ndef);
-//~ }
+/* callback for destroy / delete event in receipt window */
+void on_receipt_nfc_destroy_delete_event ()
+{
+	/*check child process availability, if exists kill it*/
+	kill_nfc_receipt_process();
+	
+	gtk_widget_hide(receiptNFCwindow->window);
+}
 
 static void kill_nfc_receipt_process()
 {

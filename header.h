@@ -39,7 +39,8 @@
 #define f_registration_window		WindowSwitcherFlag.bit6
 #define f_receipt_nfc_window		WindowSwitcherFlag.bit7
 #define f_newtranschooser_window	WindowSwitcherFlag.bit8
-#define f_newtrans_qr_window	WindowSwitcherFlag.bit9
+#define f_newtrans_qr_window		WindowSwitcherFlag.bit9
+#define f_receipt_qr_window			WindowSwitcherFlag.bit10
 #define f_status_window 			WindowSwitcherFlag.status
 
 
@@ -174,7 +175,14 @@ typedef struct
 {
 	GtkWidget *window;
 	GtkWidget *image;
+	GtkWidget *continue_button;
 }NewTransQRWindow;
+
+typedef struct
+{
+	GtkWidget *window;
+	GtkWidget *image;
+}ReceiptQRWindow;
 
 /*callback function*/
 void on_pwd_ok_button_clicked ();
@@ -197,6 +205,10 @@ void on_new_trans_cancel_button_clicked ();
 void on_new_trans_chooser_nfc_button_clicked();
 void on_new_trans_chooser_qr_button_clicked();
 void on_newtrans_qr_cancel_button_clicked();
+void on_newtrans_qr_continue_button_clicked();
+void on_receipt_nfc_destroy_delete_event ();
+void on_receipt_nfc_finish_button_clicked ();
+void on_receipt_qr_finish_button_clicked ();
 
 /*window init function*/
 gboolean init_pwd_window();
@@ -209,6 +221,7 @@ gboolean init_registration_window();
 gboolean init_receipt_window();
 gboolean init_newtrans_chooser_window();
 gboolean init_newtrans_qr_window();
+gboolean init_receipt_qr_window();
 
 /*libconfig function*/
 int config_checking();
@@ -269,6 +282,8 @@ void hexstrToBinArr(unsigned char* dest, gchar* source, gsize destlength);
 gboolean get_USB_reader_HWID (char* hwid);
 gboolean create_receipt_from_lastTransactionData();
 void print_array_inHex(const char* caption, unsigned char* array, int size);
+void create_merch_req_png();
+gboolean parse_transaction_frame(unsigned char *payload);
 
 #ifndef DECLARE_VARIABLES
 #define EXTERN /* nothing */
@@ -287,6 +302,7 @@ EXTERN RegistrationWindow *registrationwindow;
 EXTERN ReceiptWindow *receiptNFCwindow;
 EXTERN NewTransChooserWindow *newtranschooserwindow;
 EXTERN NewTransQRWindow *newtransQRwindow;
+EXTERN ReceiptQRWindow *receiptQRwindow;
 
 /*global variable*/
 EXTERN int pass_attempt;

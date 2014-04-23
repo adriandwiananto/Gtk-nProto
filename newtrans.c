@@ -1,8 +1,5 @@
 #include "header.h"
 
-static gboolean parse_transaction_frame(unsigned char *payload);
-//~ gboolean finishProcessLastTrans = FALSE;
-
 /*
 We call init_newtrans_window() when our program is starting to load 
 new trans window with references to Glade file. 
@@ -84,7 +81,7 @@ void hexstrToBinArr(unsigned char* dest, gchar* source, gsize destlength)
 }
 
 /* parse nfc data from child process */
-static void parse_nfc_data(GString *nfcdata)
+static gboolean parse_nfc_data(GString *nfcdata)
 {
 	gsize data_len;
 	/* subtract 5 from prefix "DATA:"
@@ -148,14 +145,14 @@ static void parse_nfc_data(GString *nfcdata)
 			memcpy(payload,ReceivedData+index, ReceivedNDEF.payloadLen);
 			index += ReceivedNDEF.payloadLen;
 			
-			if(!parse_transaction_frame(payload))error_message("invalid data");
+			return parse_transaction_frame(payload);
 		}
-		else fprintf(stderr, "unknown NDEF type");
+		else return FALSE;
 	}
-	else fprintf(stderr, "unsupported NDEF TNF");
+	else return FALSE;
 }
 
-static gboolean parse_transaction_frame(unsigned char *payload)
+gboolean parse_transaction_frame(unsigned char *payload)
 {
 	unsigned char PT = payload[1];
 	
@@ -172,6 +169,15 @@ static gboolean parse_transaction_frame(unsigned char *payload)
 	
 	if(decrypt_transaction_frame(decryptedPayload, encryptedPayload, transIV))
 	{
+		if(*(decryptedPayload+18) != lastTransactionData.SESNbyte[0])return FALSE;
+		if(*(decryptedPayload+19) != lastTransactionData.SESNbyte[1])return FALSE;
+		
+		int padding;
+		for(padding = 0; padding < 0x0c; padding++)
+		{
+			if(*(decryptedPayload+20+padding) != 0x0c)return FALSE;
+		}
+		
 		/* DO NOT USE IV VALUE AGAIN! 
 		 * AFTER DECRYPT USING OpenSSL, IV VALUE CHANGED!! 
 		 */
@@ -314,22 +320,21 @@ static gboolean cb_out_watch( GIOChannel *channel, GIOCondition cond, GString *d
 			memcpy(detect_str,data->str,5);
 			if(!strcmp(detect_str,"DATA:"))
 			{
-				parse_nfc_data(data);
-					
-				//~ finishProcessLastTrans = TRUE;
-				
-				if(write_lastTransaction_log() == TRUE)
+				if(parse_nfc_data(data) == TRUE)
 				{
-					//CREATE PDF HERE!!!
-					create_receipt_from_lastTransactionData();
-					parse_log_file_and_write_to_treeview(logNum(), logNum());
-					
-					/*open receipt window and main menu*/
-					Bitwise WindowSwitcherFlag;
-					f_status_window = FALSE;
-					f_mainmenu_window = TRUE;
-					f_receipt_nfc_window = TRUE;
-					WindowSwitcher(WindowSwitcherFlag);
+					if(write_lastTransaction_log() == TRUE)
+					{
+						//CREATE PDF HERE!!!
+						create_receipt_from_lastTransactionData();
+						parse_log_file_and_write_to_treeview(logNum(), logNum());
+						
+						/*open receipt window and main menu*/
+						Bitwise WindowSwitcherFlag;
+						f_status_window = FALSE;
+						f_mainmenu_window = TRUE;
+						f_receipt_nfc_window = TRUE;
+						WindowSwitcher(WindowSwitcherFlag);
+					}
 				}
 			}
 			

@@ -460,6 +460,8 @@
     <property name="can_focus">False</property>
     <property name="modal">True</property>
     <property name="window_position">center</property>
+    <signal name="destroy" handler="gtk_widget_hide" swapped="no"/>
+    <signal name="delete-event" handler="gtk_widget_hide" swapped="no"/>
     <child>
       <object class="GtkGrid" id="grid10">
         <property name="visible">True</property>
@@ -479,20 +481,20 @@
         <child>
           <object class="GtkButton" id="newtrans_qr_cancel_button">
             <property name="label" translatable="yes">Cancel</property>
-            <property name="width_request">200</property>
+            <property name="width_request">100</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="margin_left">40</property>
-            <property name="margin_right">40</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
             <property name="margin_top">5</property>
             <property name="margin_bottom">10</property>
             <signal name="clicked" handler="on_newtrans_qr_cancel_button_clicked" swapped="no"/>
           </object>
           <packing>
-            <property name="left_attach">0</property>
+            <property name="left_attach">1</property>
             <property name="top_attach">2</property>
-            <property name="width">2</property>
+            <property name="width">1</property>
             <property name="height">1</property>
           </packing>
         </child>
@@ -510,6 +512,26 @@
             <property name="left_attach">0</property>
             <property name="top_attach">0</property>
             <property name="width">2</property>
+            <property name="height">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="newtrans_qr_continue_button">
+            <property name="label" translatable="yes">Continue</property>
+            <property name="width_request">100</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
+            <property name="margin_top">5</property>
+            <property name="margin_bottom">10</property>
+            <signal name="clicked" handler="on_newtrans_qr_continue_button_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">2</property>
+            <property name="width">1</property>
             <property name="height">1</property>
           </packing>
         </child>
@@ -791,8 +813,8 @@
     <property name="modal">True</property>
     <property name="window_position">center-always</property>
     <property name="has_resize_grip">False</property>
-    <signal name="destroy" handler="gtk_widget_hide" swapped="no"/>
-    <signal name="delete-event" handler="gtk_widget_hide" swapped="no"/>
+    <signal name="destroy" handler="on_receipt_nfc_destroy_delete_event" swapped="no"/>
+    <signal name="delete-event" handler="on_receipt_nfc_destroy_delete_event" swapped="no"/>
     <child>
       <object class="GtkGrid" id="grid7">
         <property name="visible">True</property>
@@ -870,7 +892,10 @@
           <object class="GtkLabel" id="receipt_nfc_info_label">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="margin_left">10</property>
+            <property name="margin_right">10</property>
             <property name="margin_top">15</property>
+            <property name="margin_bottom">5</property>
             <property name="label" translatable="yes">Tap payer device to send receipt
 Press Finish to finish transaction without 
 sending transaction receipt</property>
@@ -879,6 +904,88 @@ sending transaction receipt</property>
           <packing>
             <property name="left_attach">0</property>
             <property name="top_attach">2</property>
+            <property name="width">2</property>
+            <property name="height">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkWindow" id="receipt_qr_window">
+    <property name="can_focus">False</property>
+    <property name="modal">True</property>
+    <property name="window_position">center</property>
+    <signal name="destroy" handler="gtk_widget_hide" swapped="no"/>
+    <signal name="delete-event" handler="gtk_widget_hide" swapped="no"/>
+    <child>
+      <object class="GtkGrid" id="grid8">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkSeparator" id="separator10">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">2</property>
+            <property name="width">2</property>
+            <property name="height">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="receipt_qr_finish_button">
+            <property name="label" translatable="yes">Finish</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
+            <property name="margin_top">5</property>
+            <property name="margin_bottom">10</property>
+            <signal name="clicked" handler="on_receipt_qr_finish_button_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">3</property>
+            <property name="width">2</property>
+            <property name="height">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkImage" id="receipt_qr_image">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
+            <property name="margin_top">5</property>
+            <property name="margin_bottom">5</property>
+            <property name="stock">gtk-dialog-warning</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">0</property>
+            <property name="width">2</property>
+            <property name="height">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="receipt_qr_info_label">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_left">10</property>
+            <property name="margin_right">10</property>
+            <property name="margin_top">15</property>
+            <property name="margin_bottom">5</property>
+            <property name="label" translatable="yes">Payer device scan this QR code to get receipt
+You can press finish button whether Payer scan this code or not</property>
+            <property name="justify">center</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">1</property>
             <property name="width">2</property>
             <property name="height">1</property>
           </packing>
