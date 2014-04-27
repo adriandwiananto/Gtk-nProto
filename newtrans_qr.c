@@ -124,8 +124,8 @@ static gboolean qr_out_watch( GIOChannel *channel, GIOCondition cond, GString *d
 						kill_qr_zbar_process();
 
 						//~ //CREATE PDF HERE!!!
-						//~ create_receipt_from_lastTransactionData();
-						//~ parse_log_file_and_write_to_treeview(logNum(), logNum());
+						create_receipt_from_lastTransactionData();
+						parse_log_file_and_write_to_treeview(logNum(), logNum());
 						
 						/*open receipt window and main menu*/
 						Bitwise WindowSwitcherFlag;
