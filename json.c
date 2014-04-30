@@ -138,6 +138,10 @@ json_object* create_log_as_json_object()
 		int HWIDint = strtoimax(HWID,NULL,10);
 		jint_HWID = json_object_new_int(HWIDint);
 	}
+	else
+	{
+		return json_object_new_object();
+	}
 	
 	json_object *jint_numOfLog = json_object_new_int(numOfLog);
 	

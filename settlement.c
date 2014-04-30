@@ -53,7 +53,7 @@ void on_settlement_claim_button_clicked()
 	}
 	else
 	{
-		error_message("Settlement Fail!");
+		error_message("Settlement Fail!\nCheck your connection and make sure NFC Reader is connected");
 	}
 }
 
@@ -70,6 +70,8 @@ void on_settlement_cancel_button_clicked()
 static gboolean send_log_to_server(int* balance_on_server)
 {
 	json_object* log_jobj = create_log_as_json_object();
+	if(strlen(json_object_to_json_string(log_jobj)) <= 3) return FALSE;
+	
 	json_object* log_jHeader = json_object_object_get(log_jobj, "header");
 	json_object* log_jLogs = json_object_object_get(log_jobj, "logs");
 	
