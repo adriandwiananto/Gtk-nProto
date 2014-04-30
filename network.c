@@ -86,9 +86,13 @@ gboolean send_reg_jsonstring_to_server(gchar* aesKeyString, unsigned int* retTS,
 		
 		//~ memcpy(serverResponse, response.ptr, response.len);
 		json_object * jobj_response = json_tokener_parse(response.ptr);
-		json_object * jobj_error = json_object_object_get(jobj_response,"error");
-		if(jobj_error != NULL)
+		
+		//if error == null (no json object error), continue
+		//otherwise internal server error
+		json_object * error_object = json_object_object_get(jobj_response, "error");
+		if(strcmp(json_object_to_json_string(error_object),"null"))
 			return FALSE;
+			
 		json_object * response_status = json_object_object_get(jobj_response,"result");
 		if(!strcmp(json_object_get_string(response_status),"Error"))
 			return FALSE;
@@ -180,6 +184,11 @@ gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonHead
 		
 		//~ memcpy(serverResponse, response.ptr, response.len);
 		json_object * jobj_response_root = json_tokener_parse(response.ptr);
+		
+		json_object * error_object = json_object_object_get(jobj_response_root, "error");
+		if(strcmp(json_object_to_json_string(error_object),"null"))
+			return FALSE;
+		
 		json_object * jobj_response_result = json_object_object_get(jobj_response_root, "result");
 		if(!strcmp(json_object_get_string(jobj_response_result),"Error"))
 			return FALSE;
