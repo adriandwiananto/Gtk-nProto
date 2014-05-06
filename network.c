@@ -184,28 +184,29 @@ gboolean send_log_jsonstring_to_server(gchar* aesKeyString, const char* jsonHead
 		
 		//~ memcpy(serverResponse, response.ptr, response.len);
 		json_object * jobj_response_root = json_tokener_parse(response.ptr);
-		
+
 		json_object * error_object = json_object_object_get(jobj_response_root, "error");
 		if(strcmp(json_object_to_json_string(error_object),"null"))
 			return FALSE;
-		
+
 		json_object * jobj_response_result = json_object_object_get(jobj_response_root, "result");
 		if(!strcmp(json_object_get_string(jobj_response_result),"Error"))
 			return FALSE;
 		if(!strcmp(json_object_get_string(jobj_response_result),"error"))
 			return FALSE;
-			
+		
 		json_object * jobj_response_balance = json_object_object_get(jobj_response_root, "balance");
 		*balance_on_server = json_object_get_int(jobj_response_balance);
-		
 		json_object * jobj_response_key = json_object_object_get(jobj_response_root, "key");
 		json_object * jobj_response_key_renew = json_object_object_get(jobj_response_key, "renew");
 		if(json_object_get_boolean(jobj_response_key_renew) == TRUE){
+			printf("renew!\n");
 			json_object * jobj_response_key_new_key = json_object_object_get(jobj_response_key, "new_key");
 			memcpy(aesKeyString, json_object_get_string(jobj_response_key_new_key), strlen(json_object_get_string(jobj_response_key_new_key)));
 		}
+
 		write_int64_to_config((uintmax_t)time(NULL), "application.LATS");
-		
+
 		free(response.ptr);
 		
 		/* always cleanup */ 

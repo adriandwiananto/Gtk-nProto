@@ -362,3 +362,50 @@ void aes256cbc(unsigned char* output, unsigned char* input, unsigned char* key, 
 		AES_cbc_encrypt(input, output, 32, &aes_key, IV_duplicate, AES_DECRYPT);
 	}
 }
+
+gboolean set_new_key(unsigned char* aes_key, const gchar* password, const gchar* accn)
+{
+	unsigned char KeyEncryptionKey[KEY_LEN_BYTE];
+	unsigned char wrapped_key[KEY_LEN_BYTE+8];
+	
+	/* derive key from password + ACCN */
+	if(derive_key(KeyEncryptionKey, password, accn, 10000) == FALSE)
+	{
+		error_message("KEK derivation error");
+		return FALSE;
+	}
+#ifdef DEBUG_MODE
+	else print_array_inHex("derived key:", KeyEncryptionKey, KEY_LEN_BYTE);
+#endif
+
+	/* wrap key using KEK */
+	if(wrap_aes_key(wrapped_key, KeyEncryptionKey, aes_key) == FALSE)
+	{
+		error_message("error wrapping key");
+		return FALSE;
+	}
+#ifdef DEBUG_MODE
+	else print_array_inHex("wrapped key:",wrapped_key, KEY_LEN_BYTE+8);
+#endif
+
+	/* convert wrapped key to base 64 and write to config */
+	char *wrapped_base64 = base64(wrapped_key, KEY_LEN_BYTE+8);
+	printf("wrapped key to write: %s\n\n",wrapped_base64);
+	write_string_to_config(wrapped_base64,"security.transaction");
+	
+#ifdef DEBUG_MODE					
+	get_string_from_config(wrapped_base64,"security.transaction");
+	unsigned char *wrapped_unbase64 = (unsigned char *) unbase64((unsigned char *)wrapped_base64, strlen(wrapped_base64)+1);
+
+	print_array_inHex("wrapped unbase64 key:", wrapped_unbase64, KEY_LEN_BYTE+8);
+	
+	/* unwrap key using KEK */
+	if(unwrap_aes_key(aes_key, KeyEncryptionKey, (unsigned char *)wrapped_unbase64) == FALSE)
+	{
+		error_message("error unwrapping key");
+		return FALSE;
+	}
+	else print_array_inHex("unwrapped key:", aes_key, KEY_LEN_BYTE);
+#endif
+	return TRUE;
+}

@@ -84,10 +84,27 @@ static gboolean send_log_to_server(int* balance_on_server)
 									"https://emoney-server.herokuapp.com/sync.json",
 									balance_on_server) == FALSE)
 		return FALSE;
-	else
-		//DELETE LOG
-		clear_DB_entry();
-		gtk_list_store_clear(historywindow->history_store);
-		settlementwindow->settlement_balance = 0;
-		return TRUE;
+
+	if(strlen(aesKeyString) > 1)
+	{
+		printf("renew to: %s\n", aesKeyString);
+		
+		unsigned char aes_key[KEY_LEN_BYTE];
+		memset(aes_key,0,KEY_LEN_BYTE);
+		hexstrToBinArr(aes_key, aesKeyString, 32);
+		
+		const gchar * pwd = gtk_entry_get_text(GTK_ENTRY(registrationwindow->new_entry));
+
+		gchar accn[32];
+		get_ACCN(accn);
+		
+		if(set_new_key(aes_key, pwd, accn) == FALSE)
+			return FALSE;
+	}
+	
+	//DELETE LOG
+	clear_DB_entry();
+	gtk_list_store_clear(historywindow->history_store);
+	settlementwindow->settlement_balance = 0;
+	return TRUE;
 }

@@ -152,46 +152,9 @@ void on_registration_request_button_clicked()
 					else print_array_inHex("aes key:", aes_key, KEY_LEN_BYTE);
 #endif
 
-					unsigned char KeyEncryptionKey[KEY_LEN_BYTE];
-					unsigned char wrapped_key[KEY_LEN_BYTE+8];
-					
-					/* derive key from password + ACCN */
-					if(derive_key(KeyEncryptionKey, new_pwd_entry, new_ACCN_entry, 10000) == FALSE)
-					{
-						error_message("KEK derivation error");
+					if(set_new_key(aes_key, new_pwd_entry, new_ACCN_entry) == FALSE)
 						abort_registration();
-					}
-#ifdef DEBUG_MODE
-					else print_array_inHex("derived key:", KeyEncryptionKey, KEY_LEN_BYTE);
-#endif
-
-					/* wrap key using KEK */
-					if(wrap_aes_key(wrapped_key, KeyEncryptionKey, aes_key) == FALSE)
-					{
-						error_message("error wrapping key");
-						abort_registration();
-					}
-#ifdef DEBUG_MODE
-					else print_array_inHex("wrapped key:",wrapped_key, KEY_LEN_BYTE);
-#endif
-
-					/* convert wrapped key to base 64 and write to config */
-					char *wrapped_base64 = base64(wrapped_key, KEY_LEN_BYTE+8);
-					printf("wrapped key to write: %s\n\n",wrapped_base64);
-					write_string_to_config(wrapped_base64,"security.transaction");
 					
-#ifdef DEBUG_MODE					
-					get_string_from_config(wrapped_base64,"security.transaction");
-					unsigned char *wrapped_unbase64 = (unsigned char *) unbase64((unsigned char *)wrapped_base64, strlen(wrapped_base64)+1);
-
-					print_array_inHex("wrapped unbase64 key:", wrapped_unbase64, KEY_LEN_BYTE+8);
-					
-					/* unwrap key using KEK */
-					if(unwrap_aes_key(aes_key, KeyEncryptionKey, (unsigned char *)wrapped_unbase64) == FALSE)
-						error_message("error unwrapping key");
-					else print_array_inHex("wrapped key:", aes_key, KEY_LEN_BYTE);
-#endif
-
 					if(createDB_and_table() == FALSE)abort_registration();
 					
 					write_int64_to_config((uintmax_t)retTS, "application.LATS");
