@@ -41,6 +41,7 @@
 #define f_newtranschooser_window	WindowSwitcherFlag.bit8
 #define f_newtrans_qr_window		WindowSwitcherFlag.bit9
 #define f_receipt_qr_window			WindowSwitcherFlag.bit10
+#define f_amount_qr_window			WindowSwitcherFlag.bit11
 #define f_status_window 			WindowSwitcherFlag.status
 
 
@@ -184,6 +185,12 @@ typedef struct
 	GtkWidget *image;
 }ReceiptQRWindow;
 
+typedef struct
+{
+	GtkWidget *window;
+	GtkWidget *amount_entry;
+}AmountQRWindow;
+
 /*callback function*/
 void on_pwd_ok_button_clicked ();
 void on_pwd_cancel_button_clicked ();
@@ -209,6 +216,8 @@ void on_newtrans_qr_continue_button_clicked();
 void on_receipt_nfc_destroy_delete_event ();
 void on_receipt_nfc_finish_button_clicked ();
 void on_receipt_qr_finish_button_clicked ();
+void on_amount_qr_request_button_clicked();
+void on_amount_qr_cancel_button_clicked();
 
 /*window init function*/
 gboolean init_pwd_window();
@@ -222,6 +231,7 @@ gboolean init_receipt_window();
 gboolean init_newtrans_chooser_window();
 gboolean init_newtrans_qr_window();
 gboolean init_receipt_qr_window();
+gboolean init_amount_qr_window();
 
 /*libconfig function*/
 int config_checking();
@@ -304,6 +314,7 @@ EXTERN ReceiptWindow *receiptNFCwindow;
 EXTERN NewTransChooserWindow *newtranschooserwindow;
 EXTERN NewTransQRWindow *newtransQRwindow;
 EXTERN ReceiptQRWindow *receiptQRwindow;
+EXTERN AmountQRWindow *amountQRwindow;
 
 /*global variable*/
 EXTERN int pass_attempt;

@@ -1,6 +1,6 @@
 CFLAGS :=-g -Wall -export-dynamic
 CXXFLAGS :=-g -Wall -export-dynamic
-C_SOURCES := main.c password.c mainmenu.c window_switcher.c newtrans.c misc.c history.c settlement.c option.c registration.c config.c crypto.c logDB.c network.c json.c receipt.c receipt_qr.c newtrans_chooser.c newtrans_qr.c
+C_SOURCES := main.c password.c mainmenu.c window_switcher.c newtrans.c misc.c history.c settlement.c option.c registration.c config.c crypto.c logDB.c network.c json.c receipt.c receipt_qr.c newtrans_chooser.c newtrans_qr.c newtrans_qr_amount.c
 CXX_SOURCES_1 := picc_emulation_read.cpp
 CXX_SOURCES_2 := picc_emulation_write.cpp
 C_EXECUTABLE=nproto

@@ -131,6 +131,7 @@ void on_registration_request_button_clicked()
 				{
 					int HWIDint = strtoimax(HWID,NULL,10);
 					
+					printf("password: %s\n",new_pwd_entry);
 					/*hash password and use ACCN as salt*/
 					passwordhashing(hashed, confirm_pwd_entry, new_ACCN_entry);
 					printf("hashed: %s\n", hashed);

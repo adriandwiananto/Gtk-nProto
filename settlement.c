@@ -93,8 +93,9 @@ static gboolean send_log_to_server(int* balance_on_server)
 		memset(aes_key,0,KEY_LEN_BYTE);
 		hexstrToBinArr(aes_key, aesKeyString, 32);
 		
-		const gchar * pwd = gtk_entry_get_text(GTK_ENTRY(registrationwindow->new_entry));
-
+		const gchar * pwd = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
+		printf("pwd: %s\n",pwd);
+		
 		gchar accn[32];
 		get_ACCN(accn);
 		

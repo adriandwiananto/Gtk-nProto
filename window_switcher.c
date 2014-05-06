@@ -63,8 +63,6 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 	/*new trans QR window switcher*/
 	if(f_newtrans_qr_window == TRUE)
 	{
-		memset(&lastTransactionData,0,sizeof(lastTransactionData));
-		
 		create_merch_req_png();
 		
 		gtk_image_set_from_file((GtkImage *)newtransQRwindow->image, "merch_req.png");
@@ -152,5 +150,18 @@ void WindowSwitcher(Bitwise WindowSwitcherFlag)
 			printf("merch_receipt.png deleted!\n");
 
 		gtk_widget_hide(receiptQRwindow->window);	
+	}
+
+	/*amount qr window switcher*/
+	if(f_amount_qr_window == TRUE)
+	{
+		memset(&lastTransactionData,0,sizeof(lastTransactionData));
+
+		gtk_entry_set_text((GtkEntry *)amountQRwindow->amount_entry, "");
+		gtk_widget_show(amountQRwindow->window);
+	}
+	else
+	{
+		gtk_widget_hide(amountQRwindow->window);	
 	}
 }

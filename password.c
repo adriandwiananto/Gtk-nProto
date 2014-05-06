@@ -90,7 +90,7 @@ void read_pwd_entry()
 #ifdef DEBUG_MODE
 				unsigned char aes_key[KEY_LEN_BYTE];
 				memset(aes_key,0,KEY_LEN_BYTE);
-				getTransKey(aes_key, pwd_entry_text, ACCNstr, FALSE);
+				getTransKey(aes_key, pwd_entry_text, ACCNstr, TRUE);
 
 				print_array_inHex("AESKEY!:", aes_key, KEY_LEN_BYTE);
 				

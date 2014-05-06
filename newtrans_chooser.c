@@ -44,7 +44,8 @@ void on_new_trans_chooser_qr_button_clicked()
 	/*open qr new trans window*/
 	Bitwise WindowSwitcherFlag;
 	f_status_window = FALSE;
-	f_newtrans_qr_window = TRUE;
+	//~ f_newtrans_qr_window = TRUE;
+	f_amount_qr_window = TRUE;
 	f_mainmenu_window = TRUE;
 	WindowSwitcher(WindowSwitcherFlag);
 }

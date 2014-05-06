@@ -257,11 +257,14 @@ void create_merch_req_png()
 	memset(merchant_request_packet+5,0,2);
 	memcpy(merchant_request_packet+7, ACCN_array, 6);
 	memcpy(merchant_request_packet+13, timestamp_array, 4);
-	memset(merchant_request_packet+17, 0, 4);
+	//memset(merchant_request_packet+17, 0, 4);
+	memcpy(merchant_request_packet+17, lastTransactionData.AMNTbyte, 4);
 	memset(merchant_request_packet+21, 0, 4);
 	memcpy(merchant_request_packet+25, lastTransactionData.SESNbyte, 2);
 	memset(merchant_request_packet+27,12,12); //PADDING
 
+	print_array_inHex("qr packet plain:",merchant_request_packet, 39);
+	
 	gchar* buf_ptr;
 
 	unsigned char transKey[32];

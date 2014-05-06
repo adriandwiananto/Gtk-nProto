@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
 	newtranschooserwindow = g_slice_new(NewTransChooserWindow);
 	newtransQRwindow = g_slice_new(NewTransQRWindow);
 	receiptQRwindow = g_slice_new(ReceiptQRWindow);
+	amountQRwindow = g_slice_new(AmountQRWindow);
 	
 	/* check config integrity */
 	config_status = config_checking();
@@ -33,6 +34,7 @@ int main(int argc, char *argv[])
 	gtk_init(&argc,&argv);
 
 	/* create all gtk window */
+	if(init_amount_qr_window() == FALSE) return 1;
 	if(init_newtrans_qr_window() == FALSE) return 1;
 	if(init_newtrans_chooser_window() == FALSE) return 1;
 	if(init_receipt_qr_window() == FALSE) return 1;
@@ -80,6 +82,7 @@ int main(int argc, char *argv[])
 	g_slice_free(NewTransChooserWindow, newtranschooserwindow);
 	g_slice_free(NewTransQRWindow, newtransQRwindow);
 	g_slice_free(ReceiptQRWindow, receiptQRwindow);
+	g_slice_free(AmountQRWindow, amountQRwindow);
 	
 	return 0;
 }
