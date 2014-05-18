@@ -34,3 +34,11 @@ void print_array_inHex(const char* caption, unsigned char* array, int size)
 	for(i = 0; i<size; i++) printf("%02X ", array[i]);
 	printf("\n");
 }
+
+double current_time_in_mill()
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	
+	return (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
+}

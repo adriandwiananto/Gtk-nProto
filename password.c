@@ -88,6 +88,9 @@ void read_pwd_entry()
 			if(!strcmp(hashedpassword, pwd_in_setting))
 			{
 #ifdef DEBUG_MODE
+				double startDerive;
+				startDerive = current_time_in_mill();
+				
 				unsigned char aes_key[KEY_LEN_BYTE];
 				memset(aes_key,0,KEY_LEN_BYTE);
 				getTransKey(aes_key, pwd_entry_text, ACCNstr, TRUE);
@@ -99,6 +102,16 @@ void read_pwd_entry()
 				if(getLogKey(logKey)==FALSE)fprintf(stderr,"error deriving key\n");
 
 				print_array_inHex("log key:", logKey, 32);
+				
+				unsigned char balanceKey[32];
+				memset(balanceKey,0,32);
+				if(getBalanceKey(balanceKey)==FALSE)fprintf(stderr,"error deriving key\n");
+
+				print_array_inHex("balance key:", balanceKey, 32);
+				
+				double stopDerive;
+				stopDerive = current_time_in_mill();
+				printf("derive time: %g ms \n", stopDerive - startDerive);
 #endif
 
 				parse_log_file_and_write_to_treeview(1,logNum()); //print all log file to treeview for the first time

@@ -308,6 +308,24 @@ gboolean getLogKey(unsigned char* logKey)
 		return TRUE;
 }
 
+//for testing purpose only!
+gboolean getBalanceKey(unsigned char* balanceKey)
+{
+	gchar ACCNstr[32];
+	get_ACCN(ACCNstr);
+	
+	const gchar *password;
+	password = gtk_entry_get_text(GTK_ENTRY(passwordwindow->text_entry));
+
+	if(derive_key(balanceKey, password, ACCNstr, 8000)==FALSE)
+	{
+		fprintf(stderr,"error deriving key\n");
+		return FALSE;
+	}
+	else
+		return TRUE;
+}
+
 int calc_sha256_of_file (char* path, char output[65])
 {
     FILE* file = fopen(path, "rb");

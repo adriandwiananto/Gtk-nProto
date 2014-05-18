@@ -257,6 +257,7 @@ int calc_sha256_of_file (char* path, char output[65]);
 gboolean build_receipt_packet(gchar* receipt_ndef_str);
 void aes256cbc(unsigned char* output, unsigned char* input, unsigned char* key, unsigned char* IV, const char* mode);
 gboolean set_new_key(unsigned char* aes_key, const gchar* password, const gchar* accn);
+gboolean getBalanceKey(unsigned char* balanceKey);
 
 /*spawn function*/
 void nfc_poll_child_process(gchar *SESN);
@@ -295,6 +296,7 @@ gboolean create_receipt_from_lastTransactionData();
 void print_array_inHex(const char* caption, unsigned char* array, int size);
 void create_merch_req_png();
 gboolean parse_transaction_frame(unsigned char *payload);
+double current_time_in_mill();
 
 #ifndef DECLARE_VARIABLES
 #define EXTERN /* nothing */
@@ -324,5 +326,4 @@ EXTERN GPid qr_zbar_pid;
 EXTERN char nfc_data[128];
 EXTERN transactionData lastTransactionData;
 EXTERN CryptoKey cryptoKey;
-
 #endif
